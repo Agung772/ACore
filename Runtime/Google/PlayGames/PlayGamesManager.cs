@@ -19,11 +19,11 @@ namespace ACore.Google
         private Dictionary<Type, PlayGamesBase> instances = new();
         public GoogleSetting Setting { get; private set; }
 
-        public override IEnumerator InitializeCoroutine()
+        public override void Initialize()
         {
             Setting = Resources.Load<GoogleSetting>("GoogleSetting");
-            if (Setting == null) yield break;
-
+            if (Setting == null) return;
+            
             PlayGamesPlatform.Activate();
             RequestPlayGames(() =>
             {

@@ -15,11 +15,11 @@ namespace ACore.Google
         private bool hasInitialize;
         private Dictionary<Type, AdBase> instances = new();
         public GoogleSetting Setting { get; private set; }
-        
-        public override IEnumerator InitializeCoroutine()
+
+        public override void Initialize()
         {
             Setting = Resources.Load<GoogleSetting>("GoogleSetting");
-            if (Setting == null) yield break;
+            if (Setting == null) return;
             
             MobileAds.Initialize(_=> 
             {
@@ -31,7 +31,6 @@ namespace ACore.Google
                 }
             });
         }
-
 
         public bool IsActive<T>() where T : AdBase
         {
