@@ -14,17 +14,17 @@ namespace ACore
 
         private void OnUpdate()
         {
-#if UNITY_ANDROID
-            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-            {
-                var _touchPos = Input.GetTouch(0).position;
-                SpawnEffectUI(_touchPos);
-            }
-#else
+#if UNITY_EDITOR 
             if (Input.GetMouseButtonDown(0))
             {
                 var _mousePos = Input.mousePosition;
                 SpawnEffectUI(_mousePos);
+            }
+#else
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                var _touchPos = Input.GetTouch(0).position;
+                SpawnEffectUI(_touchPos);
             }
 #endif
         }
