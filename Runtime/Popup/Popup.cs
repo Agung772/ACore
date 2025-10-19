@@ -9,7 +9,7 @@ namespace ACore
     public class Popup : GlobalBehaviour
     {
         public Dictionary<Type, PopupBehaviour> active = new();
-        private Dictionary<Type, PopupBehaviour> resources = new();
+        public Dictionary<Type, PopupBehaviour> resources = new();
 
         public override void Initialize()
         {
@@ -31,11 +31,14 @@ namespace ACore
 
         private PopupBehaviour SpawnPopup(PopupBehaviour prefab)
         {
-            if (prefab is WorldPopupBehaviour)
+            switch (prefab)
             {
-                return Object.Instantiate(prefab).GetComponent<PopupBehaviour>();
+                case WorldPopupBehaviour:
+                    return Object.Instantiate(prefab).GetComponent<PopupBehaviour>();
+                case TouchEffect:
+                    return Object.Instantiate(prefab, Game.Manager.FrontCanvas);
             }
-            
+
             if (prefab.setOrder)
             {
                 var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, Game.Manager.transform);

@@ -1,0 +1,38 @@
+using UnityEngine;
+
+namespace ACore
+{
+    public class TouchEffectSpawner : GlobalBehaviour
+    {
+        public override void PostInitialize()
+        {
+            if (Game.Get<Popup>().resources.ContainsKey(typeof(TouchEffect)))
+            {
+                Game.Manager.OnUpdate += OnUpdate;
+            }
+        }
+
+        private void OnUpdate()
+        {
+#if UNITY_ANDROID
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+            {
+                var _touchPos = Input.GetTouch(0).position;
+                SpawnEffectUI(_touchPos);
+            }
+#else
+            if (Input.GetMouseButtonDown(0))
+            {
+                var _mousePos = Input.mousePosition;
+                SpawnEffectUI(_mousePos);
+            }
+#endif
+        }
+
+        private void SpawnEffectUI(Vector3 screenPos)
+        {
+            var _effect = Game.Get<Popup>().Show<TouchEffect>();
+            _effect.SetPositionByScreenPoint(screenPos);
+        }
+    }
+}

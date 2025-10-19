@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.IO;
 using UnityEngine;
@@ -8,7 +9,9 @@ namespace ACore
     [DefaultExecutionOrder(-1000)]
     public class GameManager : MonoBehaviour
     {
+        public event Action OnUpdate;
         public RectTransform Canvas => canvas; [SerializeField] private RectTransform canvas;
+        public RectTransform FrontCanvas => frontCanvas; [SerializeField] private RectTransform frontCanvas;
         public RectTransform CanvasPrefab => canvasPrefab; [SerializeField] private RectTransform canvasPrefab;
         
         #if UNITY_EDITOR
@@ -27,6 +30,11 @@ namespace ACore
         private void Awake()
         {
             StartCoroutine(Initialize());
+        }
+
+        private void Update()
+        {
+            OnUpdate?.Invoke();
         }
 
         private IEnumerator Initialize()

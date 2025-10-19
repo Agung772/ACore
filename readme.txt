@@ -6,3 +6,7 @@ Request Package
 Request AdMob
 - Add package AdMob
 - Project > Player > Other Settings > Scripting Define Symbols > Add GOOGLE_MOBILE_ADS
+
+Request Touch Effect
+- Bikin prefab dan kasih script TouchEffect.cs
+- Letakan prefab di folder Resources
