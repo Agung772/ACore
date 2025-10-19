@@ -20,6 +20,7 @@ namespace ACore.Google
         {
             Setting = Resources.Load<GoogleSetting>("GoogleSetting");
             if (Setting == null) return;
+            if (Setting.noAds) return;
             
             MobileAds.Initialize(_=> 
             {
