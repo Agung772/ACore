@@ -14,7 +14,7 @@ namespace ACore
             var _allowedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
                 .Where(a =>
                     a.FullName.Contains("Assembly-CSharp") ||
-                    a.FullName.Contains("Gamecore")
+                    a.FullName.Contains("ACore")
                 ).ToArray();
             
             var _derivedTypes = _allowedAssemblies
