@@ -62,26 +62,21 @@ namespace ACore
                         {
                             Debug.LogWarning($"Skip error for storage type {_key.Name}: {_exInner.Message}");
                         }
-
-                        storages[_key].OnLoad();
                     }
                 }
                 catch (Exception _ex)
                 {
                     Debug.LogWarning($"Failed to load storage data: {_ex.Message}");
-                    foreach (var _storage in storages.Values)
-                    {
-                        _storage.OnLoad();
-                    }
                 }
             }
             else
             {
                 Debug.LogWarning("Storage data not found");
-                foreach (var _storage in storages.Values)
-                {
-                    _storage.OnLoad();
-                }
+            }
+            
+            foreach (var _storage in storages.Values)
+            {
+                _storage.OnLoad();
             }
         }
 
