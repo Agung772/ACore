@@ -1,6 +1,6 @@
 {
-    "name": "Gamecore.Runtime",
-    "rootNamespace": "Gamecore",
+    "name": "ACore.Runtime",
+    "rootNamespace": "ACore",
     "references": [
         "LeanTween",
         "Google.Play.Games"

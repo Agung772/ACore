@@ -13,8 +13,8 @@ namespace ACore
         [FoldoutGroup("Base"), ShowIf(nameof(setOrder)), InfoBox("Default Order = 1")] public int sortOrder = 2;
 
         [FoldoutGroup("Base")] [SerializeField] private bool autoClose;
+        [FoldoutGroup("Base")] [SerializeField, ShowIf("autoClose")] private float closeAfter = 1f;
         [FoldoutGroup("Base")] [SerializeField, ShowIf("autoClose")] private bool useUnScaledTime;
-        [FoldoutGroup("Base")] [SerializeField, ShowIf("autoClose")] private int closeAfter;
         [FoldoutGroup("Base")] [SerializeField] private Button closeBtn;
         
         public Action onClose;

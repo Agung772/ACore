@@ -1,5 +1,5 @@
 using System;
-namespace ACore.Tool
+namespace ACore
 {
     [AttributeUsage(AttributeTargets.Field)]
     public class PickFromSceneAttribute : Attribute{
