@@ -12,13 +12,12 @@ namespace ACore
         public static GameManager Manager { get; internal set; }
         public static string CurrentScene { get; set; }
         private static Dictionary<Type, GlobalBehaviour> globals;
-        private static Dictionary<Type, LocalBehaviour> locals;
+        private static Dictionary<Type, LocalBehaviour> locals = new();
+        private static Dictionary<Type, ScriptableObjectAuto> so = new();
 
         public static void Initialize()
         {
             CreateGlobal();
-            locals = new Dictionary<Type, LocalBehaviour>();
-            
             Get<SceneLoader>().OnUnloaded += UnloadedLocal;
         }
 
@@ -84,7 +83,28 @@ namespace ACore
         {
             return TryGet<T>(out var _behaviour) ? _behaviour : null;
         }
+        
+        public static T GetSO<T>() where T : ScriptableObjectAuto
+        {
+            var _type = typeof(T);
 
+            if (so.TryGetValue(_type, out var _so))
+            {
+                return _so as T;
+            }
+            
+            var _allSO = Resources.LoadAll<ScriptableObjectAuto>("");
+            foreach (var _item in _allSO)
+            {
+                var _itemType = _item.GetType();
+                so.TryAdd(_itemType, _item);
+            }
+                
+            so.TryGetValue(_type, out _so);
+
+            return _so as T;
+        }
+        
         public static void Quit()
         {
             Application.Quit();
