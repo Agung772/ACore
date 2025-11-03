@@ -7,14 +7,14 @@ namespace ACore
 {
     public static partial class CoroutineUtility
     {
-        public static Dictionary<GameObject, Dictionary<string, Coroutine>> CoroutinesWithId = new ();
+        public static Dictionary<GameObject, Dictionary<string, Coroutine>> CoroutinesWithID = new ();
 
         private static void TryAddCoroutine(GameObject key, string id, Coroutine routine)
         {
-            if (!CoroutinesWithId.TryGetValue(key, out var _dict))
+            if (!CoroutinesWithID.TryGetValue(key, out var _dict))
             {
                 _dict = new Dictionary<string, Coroutine>();
-                CoroutinesWithId[key] = _dict;
+                CoroutinesWithID[key] = _dict;
             }
 
             if (_dict.TryGetValue(id, out var _existing) && _existing != null)
@@ -27,9 +27,9 @@ namespace ACore
 
         private static void RemoveCoroutine(GameObject key, string id)
         {
-            if (!CoroutinesWithId.TryGetValue(key, out var _dict)) return;
+            if (!CoroutinesWithID.TryGetValue(key, out var _dict)) return;
             _dict.Remove(id);
-            if (_dict.Count == 0) CoroutinesWithId.Remove(key);
+            if (_dict.Count == 0) CoroutinesWithID.Remove(key);
         }
 
         private static Coroutine ExecuteCoroutine(GameObject key, string id, IEnumerator routine)
@@ -55,7 +55,7 @@ namespace ACore
         public static void StopCoroutine(this GameObject key, string id)
         {
             if (Game.Manager == null) return;
-            if (!CoroutinesWithId.TryGetValue(key, out var _dict)) return;
+            if (!CoroutinesWithID.TryGetValue(key, out var _dict)) return;
 
             if (_dict.TryGetValue(id, out var _coroutine) && _coroutine != null)
             {
@@ -63,12 +63,12 @@ namespace ACore
                 _dict.Remove(id);
             }
 
-            if (_dict.Count == 0) CoroutinesWithId.Remove(key);
+            if (_dict.Count == 0) CoroutinesWithID.Remove(key);
         }
 
         public static bool IsCoroutine(this GameObject key, string id)
         {
-            return CoroutinesWithId.TryGetValue(key, out var _dict) && _dict.ContainsKey(id);
+            return CoroutinesWithID.TryGetValue(key, out var _dict) && _dict.ContainsKey(id);
         }
     }
 }

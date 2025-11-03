@@ -73,7 +73,7 @@ namespace ACore
                 Coroutines.Remove(key);
             }
 
-            if (CoroutinesWithId.TryGetValue(key, out var _dict))
+            if (CoroutinesWithID.TryGetValue(key, out var _dict))
             {
                 foreach (var _kvp in _dict)
                 {
@@ -82,7 +82,7 @@ namespace ACore
                         Game.Manager.StopCoroutine(_kvp.Value);
                     }
                 }
-                CoroutinesWithId.Remove(key);
+                CoroutinesWithID.Remove(key);
             }
         }
         
