@@ -13,7 +13,7 @@ namespace ACore
         public static string CurrentScene { get; set; }
         private static Dictionary<Type, GlobalBehaviour> globals;
         private static Dictionary<Type, LocalBehaviour> locals = new();
-        private static Dictionary<Type, ScriptableObjectAuto> so = new();
+
 
         public static void Initialize()
         {
@@ -84,25 +84,14 @@ namespace ACore
             return TryGet<T>(out var _behaviour) ? _behaviour : null;
         }
         
+        public static T GetStorage<T>() where T : BaseStorage, new()
+        {
+            return Get<Storage>().Get<T>();
+        }
+        
         public static T GetSO<T>() where T : ScriptableObjectAuto
         {
-            var _type = typeof(T);
-
-            if (so.TryGetValue(_type, out var _so))
-            {
-                return _so as T;
-            }
-            
-            var _allSO = Resources.LoadAll<ScriptableObjectAuto>("");
-            foreach (var _item in _allSO)
-            {
-                var _itemType = _item.GetType();
-                so.TryAdd(_itemType, _item);
-            }
-                
-            so.TryGetValue(_type, out _so);
-
-            return _so as T;
+            return ScriptableObjectUtility.GetSO<T>();
         }
         
         public static void Quit()

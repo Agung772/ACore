@@ -1,11 +1,8 @@
 #if GOOGLE_MOBILE
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using GoogleMobileAds.Api;
-using GooglePlayGames;
-using GooglePlayGames.BasicApi;
 using UnityEngine;
 
 namespace ACore.Google
