@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace ACore
 {
     public class ACoreStorage : BaseStorage
@@ -13,9 +11,7 @@ namespace ACore
                 language = Localize.GetDefault();
             }
             
-            
             Localize.Initialize();
-            Debug.Log(        Localize.GetText("test"));
         }
     }
 }
