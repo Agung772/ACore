@@ -10,6 +10,7 @@ namespace ACore
         public static Dictionary<string, string> ParseCsv(this TextAsset asset, string language)
         {
             var _dict = new Dictionary<string, string>();
+            if (!asset) return _dict;
             if (string.IsNullOrEmpty(asset.text)) return _dict;
 
             using var _reader = new StringReader(asset.text);
