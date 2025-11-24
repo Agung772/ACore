@@ -2,7 +2,6 @@ using System;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Drawers;
-using Sirenix.OdinInspector.Editor.ValueResolvers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -19,11 +18,9 @@ namespace ACore.Tool
         private IfAttributeHelper ifAttributeHelper;
         private object valueCondition;
         private bool hideIfCondition;
-        private Color handleColor;
-
+ 
         protected override void Initialize()
         {
-            handleColor = ValueResolver.Get(Property, Attribute.HandleColor, Color.white).GetValue();
             label = Property.NiceName.ToTitleCase();
             current = ValueEntry.SmartValue;
             SceneView.duringSceneGui -= OnSceneGUI;
@@ -50,14 +47,14 @@ namespace ACore.Tool
                 return;
             }
 
+            if (Property.LastDrawnValueRect.height <= 0f) return;
             if (!IsVisibleInInspector()) return;
 
-            var _guiColor = Handles.color;
-            Handles.color = handleColor;
-            var _handlePosition = Handles.FreeMoveHandle(ValueEntry.SmartValue, 0.5f, Vector3.zero, Handles.SphereHandleCap);
+            var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
             var _label = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
-            Handles.color = _guiColor;
-            Handles.Label(_handlePosition + Vector3.down * 1f, _label, buttonStyle);
+            var _cam = SceneView.lastActiveSceneView.camera;
+            var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(_handlePosition) * 0.2f;
+            Handles.Label(_handlePosition + _offset, _label, buttonStyle);
 
             if (current == _handlePosition) return;
 

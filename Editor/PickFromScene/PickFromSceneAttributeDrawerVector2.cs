@@ -2,7 +2,6 @@ using System;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Drawers;
-using Sirenix.OdinInspector.Editor.ValueResolvers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -18,10 +17,8 @@ namespace ACore.Tool
         private IfAttributeHelper ifAttributeHelper;
         private object valueCondition;
         private bool hideIfCondition;
-        private Color handleColor;
 
         protected override void Initialize() {
-            handleColor  = ValueResolver.Get(Property,Attribute.HandleColor, Color.white).GetValue();
             label = Property.NiceName.ToTitleCase();
             current = ValueEntry.SmartValue;
             SceneView.duringSceneGui -= OnSceneGUI;
@@ -42,14 +39,18 @@ namespace ACore.Tool
                 SceneView.duringSceneGui -= OnSceneGUI;
                 return;
             }
+            
+            if (Property.LastDrawnValueRect.height <= 0f) return;
             if (!IsVisibleInInspector()) return;
-            var _guiColor = Handles.color;
-            Handles.color = handleColor;
-            var _handlePosition = (Vector2)Handles.FreeMoveHandle(ValueEntry.SmartValue, 0.5f, Vector3.zero, Handles.SphereHandleCap);
-            var _label = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : this.label;
-            Handles.color = _guiColor;
-            Handles.Label(_handlePosition + Vector2.down, _label, buttonStyle);
-            if (current == _handlePosition) return;
+            
+            var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
+            var _label = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
+            var _cam = SceneView.lastActiveSceneView.camera;
+            var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(_handlePosition) * 0.2f;
+            Handles.Label(_handlePosition + _offset, _label, buttonStyle);
+            
+            if (current == (Vector2)_handlePosition) return;
+            
             ValueEntry.SmartValue = _handlePosition;
             current = _handlePosition;
             try {
@@ -90,9 +91,6 @@ namespace ACore.Tool
         }
 
         private void SetupOdinVisibilityAttribute() {
-            // Jika ada lebih dari satu visibility attribute, kita gk bisa tentuin pilih mana (gk ada akses ke odin order) 
-            // jadi , kalo perlu dimerge condition yg di property nya
-            // tp, dikebanyakan kasus hanya ada Showif/Hideif
             var _condition = "";
             if (TryGetAttribute<ShowIfAttribute>(out var _showIfAttribute)) {
                 _condition = _showIfAttribute.Condition;
