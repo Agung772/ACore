@@ -32,6 +32,7 @@ namespace ACore
             Game.Get<Popup>().RemoveOnLoaded(removeAllPopup);
             var _async = SceneManager.LoadSceneAsync(sceneName);
 
+            Game.CurrentScene = sceneName;
             while (_async.isDone)
             {
                 var _progress = Mathf.Clamp01(_async.progress / 0.9f);
@@ -39,7 +40,6 @@ namespace ACore
                 yield return null;
             }
             
-            Game.CurrentScene = sceneName;
 
             var _isCompleted = false;
             _async.completed += _ => _isCompleted = true;
