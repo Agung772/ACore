@@ -38,12 +38,13 @@ namespace ACore
                 onProgress?.Invoke(_progress);
                 yield return null;
             }
+            
+            Game.CurrentScene = sceneName;
 
             var _isCompleted = false;
             _async.completed += _ => _isCompleted = true;
             yield return new WaitUntil(() => _isCompleted);
             
-            Game.CurrentScene = SceneManager.GetActiveScene().name;
             onComplete?.Invoke();
         }
     }
