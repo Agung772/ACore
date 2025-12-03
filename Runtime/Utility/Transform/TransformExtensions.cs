@@ -8,9 +8,9 @@ namespace ACore
         {
             if (parent == null) return;
             
-            for (int i = parent.childCount - 1; i >= 0; i--)
+            for (int _i = parent.childCount - 1; _i >= 0; _i--)
             {
-                var _child = parent.GetChild(i).gameObject;
+                var _child = parent.GetChild(_i).gameObject;
                 DestroyObject(_child);
             }
         }
@@ -39,6 +39,22 @@ namespace ACore
                 Object.Destroy(go);
             else
                 Object.DestroyImmediate(go);
+        }
+
+        public static Vector3 GetCenter(this Transform[] transforms)
+        {
+            if (transforms == null || transforms.Length == 0)
+                return Vector3.zero;
+
+            var _sum = Vector3.zero;
+
+            for (int _i = 0; _i < transforms.Length; _i++)
+            {
+                if (transforms[_i] != null)
+                    _sum += transforms[_i].position;
+            }
+
+            return _sum / transforms.Length;
         }
     }
 }
