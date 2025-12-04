@@ -21,8 +21,8 @@ namespace ACore
         }
         private static T GetNonRepeatingRandom<T>(this T[] origins, int key)
         {
-            if (origins == null || origins.Length == 0)
-                return default;
+            if (origins == null || origins.Length == 0) return default;
+            if (origins.Length == 1) return origins[0];
             
             if (!arrayUsageStates.ContainsKey(key))
             {
@@ -31,11 +31,11 @@ namespace ACore
     
             var _values = arrayUsageStates[key];
             List<int> _reValues = new();
-            for (int i = 0; i < _values.Length; i++)
+            for (int _i = 0; _i < _values.Length; _i++)
             {
-                if (!_values[i])
+                if (!_values[_i])
                 {
-                    _reValues.Add(i);
+                    _reValues.Add(_i);
                 }
             }
     
@@ -45,10 +45,10 @@ namespace ACore
     
             if (_values.All(value => value))
             {
-                for (int i = 0; i < _values.Length; i++)
+                for (int _i = 0; _i < _values.Length; _i++)
                 {
-                    if (i == _resultIndex) continue;
-                    _values[i] = false;
+                    if (_i == _resultIndex) continue;
+                    _values[_i] = false;
                 }
             }
     
