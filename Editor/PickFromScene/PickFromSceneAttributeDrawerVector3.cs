@@ -34,7 +34,10 @@ namespace ACore.Tool
         {
             try
             {
-                if (Property?.Tree?.UnitySerializedObject?.targetObject == null) return;
+                if (Property == null) return;
+                if (Property.Tree == null) return;
+                if (Property.Tree.UnitySerializedObject == null) return;
+                if (Property.Tree.UnitySerializedObject.targetObject == null) return;
                 if (!Property.IsReachableFromRoot())
                 {
                     SceneView.duringSceneGui -= OnSceneGUI;
