@@ -1,5 +1,6 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace ACore.Animation
 {
@@ -11,6 +12,8 @@ namespace ACore.Animation
         [SerializeField] protected bool isLoop;
         [SerializeField, ShowIf(nameof(isLoop))] protected int loopCount = -1;
         [SerializeField, ShowIf(nameof(isLoop))] protected LeanTweenType loopType = LeanTweenType.clamp;
+        
+        [PropertyOrder(-100)] public UnityEvent onComplete;
         
         protected LTDescr descr;
         
@@ -48,6 +51,8 @@ namespace ACore.Animation
                 }
  
             }
+            
+            descr.setOnComplete(() => onComplete?.Invoke());
         }
         
         public virtual void Stop()
