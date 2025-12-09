@@ -40,7 +40,6 @@ namespace ACore.Animation
             meshMat.DisableKeyword("_ALPHATEST_ON");
             meshMat.EnableKeyword("_ALPHABLEND_ON");
             meshMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            meshMat.renderQueue = 3000;
         }
 
         public override void Play()
