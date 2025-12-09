@@ -13,7 +13,7 @@ namespace ACore.Animation
         [SerializeField, ShowIf(nameof(isLoop))] protected int loopCount = -1;
         [SerializeField, ShowIf(nameof(isLoop))] protected LeanTweenType loopType = LeanTweenType.clamp;
         
-        [PropertyOrder(-100)] public UnityEvent onComplete;
+        [PropertyOrder(100)] public UnityEvent onComplete;
         
         protected LTDescr descr;
         
