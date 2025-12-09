@@ -3,14 +3,11 @@ using UnityEngine;
 
 namespace ACore.Animation
 {
-    public class MoveRectThis : AnimationBase
+    public class MoveRectThis : AnimationTimeBase
     {
         [SerializeField] private bool isFrom;
         [SerializeField, ShowIf(nameof(isFrom)), PickFromScene] private Vector3 from;
         [SerializeField, PickFromScene] private Vector3 to;
-        
-        [SerializeField] private float time = 1;
-        [SerializeField] private LeanTweenType type;
         
         private RectTransform rectTransform;
 
@@ -30,7 +27,7 @@ namespace ACore.Animation
             { 
                 rectTransform.anchoredPosition= from;
             }
-            base.descr = rectTransform.LeanMove(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+            base.descr = rectTransform.LeanMove(to, time);
             base.Play();
         }
         
@@ -41,7 +38,7 @@ namespace ACore.Animation
             if (isFrom)
             {
                 if (fasted) rectTransform.anchoredPosition= from;
-                else rectTransform.LeanMove(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                else rectTransform.LeanMove(from, time);
             }
         }
     }

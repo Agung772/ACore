@@ -4,14 +4,11 @@ using UnityEngine.UI;
 
 namespace ACore.Animation
 {
-    public class ColorThis : AnimationBase
+    public class ColorThis : AnimationTimeBase
     {
         [SerializeField] private bool isFrom;
         [SerializeField, ShowIf(nameof(isFrom))] private Color from = Color.white;
         [SerializeField] private Color to = Color.white;
-        
-        [SerializeField] private float time = 1;
-        [SerializeField] private LeanTweenType type;
         
         private SpriteRenderer spriteRenderer;
         private Image image;
@@ -58,18 +55,16 @@ namespace ACore.Animation
 
             if (spriteRenderer)
             {
-                base.descr = gameObject.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                base.descr = gameObject.LeanColor(to, time);
             }
             else if (image)
             {
-                base.descr = image.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                base.descr = image.LeanColor(to, time);
             }
             else if (meshMat)
             {
                 var _start = meshMat.color;
                 base.descr = LeanTween.value(gameObject, _start, to, time)
-                    .setEase(type)
-                    .setIgnoreTimeScale(base.useUnScaledTime)
                     .setOnUpdate((Color v) => { meshMat.color = v; });
             }
 
@@ -91,16 +86,12 @@ namespace ACore.Animation
             }
             else
             {
-                if (spriteRenderer)
-                    gameObject.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
-                else if (image)
-                    image.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                if (spriteRenderer) gameObject.LeanColor(from, time);
+                else if (image) image.LeanColor(from, time);
                 else if (meshMat)
                 {
                     var _cur = meshMat.color;
                     LeanTween.value(gameObject, _cur, from, time)
-                        .setEase(type)
-                        .setIgnoreTimeScale(base.useUnScaledTime)
                         .setOnUpdate((Color v) => { meshMat.color = v; });
                 }
             }

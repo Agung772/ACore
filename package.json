@@ -1,6 +1,6 @@
 {
   "name": "com.agung.acore",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "displayName": "ACore",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.1"

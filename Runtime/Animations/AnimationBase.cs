@@ -52,6 +52,7 @@ namespace ACore.Animation
  
             }
             
+            descr.setIgnoreTimeScale(useUnScaledTime);
             descr.setOnComplete(() => onComplete?.Invoke());
         }
         
@@ -62,7 +63,10 @@ namespace ACore.Animation
                 gameObject.LeanCancel(descr.id);
             }
         }
-        
-        public virtual void ToDefault(bool fasted = false) { }
+
+        public virtual void ToDefault(bool fasted = false)
+        {
+            descr.setIgnoreTimeScale(useUnScaledTime);
+        }
     }
 }

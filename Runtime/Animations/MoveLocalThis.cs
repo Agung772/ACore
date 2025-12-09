@@ -3,14 +3,11 @@ using UnityEngine;
 
 namespace ACore.Animation
 {
-    public class MoveLocalThis : AnimationBase
+    public class MoveLocalThis : AnimationTimeBase
     {
         [SerializeField] private bool isFrom;
         [SerializeField, ShowIf(nameof(isFrom)), PickFromScene] private Vector3 from;
         [SerializeField, PickFromScene] private Vector3 to;
-        
-        [SerializeField] private float time = 1;
-        [SerializeField] private LeanTweenType type;
 
         private void Awake()
         {
@@ -27,7 +24,7 @@ namespace ACore.Animation
             { 
                 transform.localPosition = from;
             }
-            base.descr = gameObject.LeanMoveLocal(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+            base.descr = gameObject.LeanMoveLocal(to, time);
             base.Play();
         }
 
@@ -38,7 +35,7 @@ namespace ACore.Animation
             if (isFrom)
             {
                 if (fasted) transform.localPosition = from;
-                else gameObject.LeanMoveLocal(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                else gameObject.LeanMoveLocal(from, time);
             }
         }
     }

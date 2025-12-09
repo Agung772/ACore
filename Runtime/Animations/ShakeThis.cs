@@ -21,7 +21,7 @@ namespace ACore.Animation
                 .setOnComplete(() =>
                 {
                     gameObject.LeanMoveLocal(from, returnDuration);
-                }).setIgnoreTimeScale(base.useUnScaledTime);
+                });
             
             base.Play();
         }
