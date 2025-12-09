@@ -15,12 +15,16 @@ namespace ACore.Animation
         
         private SpriteRenderer spriteRenderer;
         private Image image;
+        private Renderer meshRenderer;
+        private Material meshMat;
 
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
             image = GetComponent<Image>();
-            
+            meshRenderer = GetComponent<Renderer>();
+            if (meshRenderer) SetupMeshRenderer();
+
             if (isFrom && !base.autoPlay)
             {
                 if (spriteRenderer) spriteRenderer.color = from;
@@ -28,18 +32,47 @@ namespace ACore.Animation
             }
         }
 
+        private void SetupMeshRenderer()
+        {
+            meshMat = meshRenderer.material;
+            if (isFrom && !base.autoPlay) meshMat.color = from;
+
+            meshMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            meshMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            meshMat.SetInt("_ZWrite", 0);
+            meshMat.DisableKeyword("_ALPHATEST_ON");
+            meshMat.EnableKeyword("_ALPHABLEND_ON");
+            meshMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            meshMat.renderQueue = 3000;
+        }
+
         public override void Play()
         {
             base.Stop();
             if (isFrom && base.autoPlay)
-            { 
+            {
                 if (spriteRenderer) spriteRenderer.color = from;
                 else if (image) image.color = from;
+                else if (meshMat) meshMat.color = from;
             }
 
-            if (spriteRenderer) base.descr = gameObject.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
-            else if (image) base.descr = image.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
-            
+            if (spriteRenderer)
+            {
+                base.descr = gameObject.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+            }
+            else if (image)
+            {
+                base.descr = image.LeanColor(to, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+            }
+            else if (meshMat)
+            {
+                var _start = meshMat.color;
+                base.descr = LeanTween.value(gameObject, _start, to, time)
+                    .setEase(type)
+                    .setIgnoreTimeScale(base.useUnScaledTime)
+                    .setOnUpdate((Color v) => { meshMat.color = v; });
+            }
+
             base.Play();
         }
 
@@ -47,17 +80,28 @@ namespace ACore.Animation
         {
             base.Stop();
             base.ToDefault(fasted);
-            if (isFrom)
+
+            if (!isFrom) return;
+
+            if (fasted)
             {
-                if (fasted)
+                if (spriteRenderer) spriteRenderer.color = from;
+                else if (image) image.color = from;
+                else if (meshMat) meshMat.color = from;
+            }
+            else
+            {
+                if (spriteRenderer)
+                    gameObject.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                else if (image)
+                    image.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                else if (meshMat)
                 {
-                    if (spriteRenderer) spriteRenderer.color = from;
-                    else if (image) image.color = from;
-                }
-                else
-                {
-                    if (spriteRenderer) gameObject.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
-                    else if (image) image.LeanColor(from, time).setEase(type).setIgnoreTimeScale(base.useUnScaledTime);
+                    var _cur = meshMat.color;
+                    LeanTween.value(gameObject, _cur, from, time)
+                        .setEase(type)
+                        .setIgnoreTimeScale(base.useUnScaledTime)
+                        .setOnUpdate((Color v) => { meshMat.color = v; });
                 }
             }
         }
