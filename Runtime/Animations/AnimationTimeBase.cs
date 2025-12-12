@@ -10,14 +10,12 @@ namespace ACore.Animation
 
         public override void Play()
         {
-            base.Play();
-            
             base.descr.setEase(type);
-            
             if (startDelay > 0)
             {
                 base.descr.setDelay(startDelay);
             }
+            base.Play();
         }
 
         public override void ToDefault(bool fasted = false)

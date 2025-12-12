@@ -58,10 +58,11 @@ namespace ACore.Animation
         
         public virtual void Stop()
         {
-            if (descr != null)
+            if (descr != null && descr.uniqueId > 0)
             {
-                gameObject.LeanCancel(descr.uniqueId);
+                LeanTween.cancel(descr.uniqueId);
             }
+            descr = null;
         }
 
         public virtual void ToDefault(bool fasted = false)
