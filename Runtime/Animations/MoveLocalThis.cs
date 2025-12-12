@@ -30,13 +30,18 @@ namespace ACore.Animation
 
         public override void ToDefault(bool fasted = false)
         {
-            base.Stop();
-            base.ToDefault(fasted);
-            if (isFrom)
+            if (!isFrom)
             {
-                if (fasted) transform.localPosition = from;
-                else gameObject.LeanMoveLocal(from, time);
+                Debug.LogWarning("To Default not available because it is not from.");
+                return;
             }
+            
+            base.Stop();
+            
+            if (fasted) transform.localPosition = from;
+            else base.descr = gameObject.LeanMoveLocal(from, time);
+            
+            base.ToDefault(fasted);
         }
     }
 }

@@ -73,9 +73,12 @@ namespace ACore.Animation
         public override void ToDefault(bool fasted = false)
         {
             base.Stop();
-            base.ToDefault(fasted);
 
-            if (!isFrom) return;
+            if (!isFrom)
+            {
+                Debug.LogWarning("To Default not available because it is not from.");
+                return;
+            }
 
             if (fasted)
             {
@@ -85,15 +88,16 @@ namespace ACore.Animation
             }
             else
             {
-                if (spriteRenderer) gameObject.LeanColor(from, time);
-                else if (image) image.LeanColor(from, time);
+                if (spriteRenderer) base.descr = gameObject.LeanColor(from, time);
+                else if (image) base.descr = image.LeanColor(from, time);
                 else if (meshMat)
                 {
                     var _cur = meshMat.color;
-                    LeanTween.value(gameObject, _cur, from, time)
+                    base.descr = LeanTween.value(gameObject, _cur, from, time)
                         .setOnUpdate((Color v) => { meshMat.color = v; });
                 }
             }
+            base.ToDefault(fasted);
         }
     }
 }

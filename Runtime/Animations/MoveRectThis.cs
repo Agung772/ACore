@@ -33,13 +33,18 @@ namespace ACore.Animation
         
         public override void ToDefault(bool fasted = false)
         {
-            base.Stop();
-            base.ToDefault(fasted);
-            if (isFrom)
+            if (!isFrom)
             {
-                if (fasted) rectTransform.anchoredPosition= from;
-                else rectTransform.LeanMove(from, time);
+                Debug.LogWarning("To Default not available because it is not from.");
+                return;
             }
+            
+            base.Stop();
+            
+            if (fasted) rectTransform.anchoredPosition= from;
+            else base.descr = rectTransform.LeanMove(from, time);
+            
+            base.ToDefault(fasted);
         }
     }
 }

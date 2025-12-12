@@ -31,13 +31,18 @@ namespace ACore.Animation
         
         public override void ToDefault(bool fasted = false)
         {
-            base.Stop();
-            base.ToDefault(fasted);
-            if (isFrom)
+            if (!isFrom)
             {
-                if (fasted) transform.eulerAngles = from;
-                else gameObject.LeanRotateAroundLocal(from, add, time);
+                Debug.LogWarning("To Default not available because it is not from.");
+                return;
             }
+            
+            base.Stop();
+            
+            if (fasted) transform.eulerAngles = from;
+            else base.descr = gameObject.LeanRotateAroundLocal(from, add, time);
+            
+            base.ToDefault(fasted);
         }
     }
 }
