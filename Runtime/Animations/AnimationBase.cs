@@ -60,7 +60,7 @@ namespace ACore.Animation
         {
             if (descr != null)
             {
-                gameObject.LeanCancel(descr.id);
+                gameObject.LeanCancel(descr.uniqueId);
             }
         }
 
