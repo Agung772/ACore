@@ -8,13 +8,20 @@ namespace ACore.Animation
         [SerializeField] protected float time = 1;
         [SerializeField] protected LeanTweenType type;
 
+        protected override void OnEnable()
+        {
+            if (autoPlay && startDelay > 0)
+            {
+                base.descr = gameObject.LeanDelayedCall(startDelay, Play);
+                return;
+            }
+            
+            base.OnEnable();
+        }
+
         public override void Play()
         {
             base.descr.setEase(type);
-            if (startDelay > 0)
-            {
-                base.descr.setDelay(startDelay);
-            }
             base.Play();
         }
 

@@ -46,17 +46,13 @@ namespace ACore.Animation
 
         private void PrepareMeshTransparencyIfNeeded()
         {
-            if (!meshRenderer || meshTransparentPrepared)
-                return;
-            
+            if (!meshRenderer || meshTransparentPrepared) return;
             if (meshMat.color.a < 1f)
             {
                 meshTransparentPrepared = true;
                 return;
             }
-
-            if (!NeedTransparency())
-                return;
+            if (!NeedTransparency()) return;
             
             meshMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             meshMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
@@ -91,7 +87,7 @@ namespace ACore.Animation
             else if (meshRenderer)
             {
                 var _start = meshMat.color;
-                base.descr = LeanTween.value(gameObject, _start, to, time)
+                base.descr = gameObject.LeanValue(_start, to, time)
                     .setOnUpdate(c => meshMat.color = c);
                 base.descr.setOnStart(PrepareMeshTransparencyIfNeeded);
             }
