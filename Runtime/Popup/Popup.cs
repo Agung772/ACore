@@ -31,12 +31,11 @@ namespace ACore
             var _popup = SpawnPopup(prefab);
             _popup.Initialize();
 
-            var _isBlockedType =
-                _popup is MultiPopupBehaviour
-                    or WorldPopupBehaviour;
-
-            if (!_isBlockedType)
-                active.Add(typeof(T), _popup);
+            if (_popup is not MultiPopupBehaviour
+                && _popup is not WorldPopupBehaviour)
+            {
+                active.Add(_popup.GetType(), _popup);
+            }
 
             return (T)_popup;
         }
