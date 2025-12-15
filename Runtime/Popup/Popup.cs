@@ -22,15 +22,22 @@ namespace ACore
 
         public T Show<T>() where T : PopupBehaviour
         {
-            var _prefab = resources[typeof(T)];
-            var _popup = SpawnPopup(_prefab);
+            var _prefab = (T)resources[typeof(T)];
+            return Show(_prefab);
+        }
+
+        public T Show<T>(T prefab) where T : PopupBehaviour
+        {
+            var _popup = SpawnPopup(prefab);
             _popup.Initialize();
-            
+
             var _isBlockedType =
-                _popup is MultiPopupBehaviour 
+                _popup is MultiPopupBehaviour
                     or WorldPopupBehaviour;
 
-            if (!_isBlockedType) active.Add(typeof(T), _popup);
+            if (!_isBlockedType)
+                active.Add(typeof(T), _popup);
+
             return (T)_popup;
         }
 
