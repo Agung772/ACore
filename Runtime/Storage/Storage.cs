@@ -8,23 +8,23 @@ using UnityEngine;
 
 namespace ACore
 {
-    public class Storage : GlobalBehaviour
+    public static class Storage
     {
         private const string FILE_NAME = "Save.txt";
-        private string PathFile => Path.Combine(Application.persistentDataPath, FILE_NAME);
+        private static string PathFile => Path.Combine(Application.persistentDataPath, FILE_NAME);
         
-        private readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
-        private Dictionary<Type, BaseStorage> storages = new();
-        internal T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
+        private static readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
+        private static Dictionary<Type, BaseStorage> storages = new();
+        public static T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
 
-        public override void Initialize()
+        public static void Initialize()
         {
             Create();
             Load();
             Application.quitting += Save;
         }
 
-        private void Create()
+        private static void Create()
         {
             storages = InstanceUtility.Create<BaseStorage>();
             foreach (var _storage in storages.Values)
@@ -32,7 +32,7 @@ namespace ACore
                 _storage.OnCreate();
             }
         }
-        private void Load()
+        private static void Load()
         {
             if (File.Exists(PathFile))
             {
@@ -85,8 +85,11 @@ namespace ACore
             }
         }
 
-        public void Save()
+        public static void Save()
         {
+            if (storages == null) return;
+            if (storages.Count == 0) return;
+            
             foreach (var _key in storages.Keys.ToList())
             {
                 storages[_key].OnSave();

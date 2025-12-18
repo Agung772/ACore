@@ -35,7 +35,7 @@ namespace ACore
         public virtual void Close()
         {
             onClose?.Invoke();
-            Game.Get<Popup>().active.Remove(GetType());
+            Popup.active.Remove(GetType());
             Destroy(gameObject);
         }
     }

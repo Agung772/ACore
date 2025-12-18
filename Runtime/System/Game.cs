@@ -28,6 +28,9 @@ namespace ACore
         
         private static void CreateGlobal()
         {
+            Popup.Initialize();
+            Storage.Initialize();
+            
             globals = InstanceUtility.Create<GlobalBehaviour>();
             var _orderGlobal = OrderGlobal(globals.Values.ToArray());
             foreach (var _global in _orderGlobal) { _global.Initialize(); }
@@ -82,11 +85,6 @@ namespace ACore
         public static T Get<T>() where T : class, IBehaviour
         {
             return TryGet<T>(out var _behaviour) ? _behaviour : null;
-        }
-        
-        public static T GetStorage<T>() where T : BaseStorage, new()
-        {
-            return Get<Storage>().Get<T>();
         }
         
         public static T GetSO<T>() where T : ScriptableObjectAuto

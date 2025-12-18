@@ -6,12 +6,12 @@ using Object = UnityEngine.Object;
 
 namespace ACore
 {
-    public class Popup : GlobalBehaviour
+    public static class Popup
     {
-        public Dictionary<Type, PopupBehaviour> active = new();
-        public Dictionary<Type, PopupBehaviour> resources = new();
+        public static Dictionary<Type, PopupBehaviour> active = new();
+        public static Dictionary<Type, PopupBehaviour> resources = new();
 
-        public override void Initialize()
+        public static void Initialize()
         {
             var _popups = Resources.LoadAll<PopupBehaviour>("");
             foreach (var _popup in _popups)
@@ -20,13 +20,13 @@ namespace ACore
             }
         }
 
-        public T Show<T>() where T : PopupBehaviour
+        public static T Show<T>() where T : PopupBehaviour
         {
             var _prefab = (T)resources[typeof(T)];
             return Show(_prefab);
         }
 
-        public T Show<T>(T prefab) where T : PopupBehaviour
+        public static T Show<T>(T prefab) where T : PopupBehaviour
         {
             var _popup = SpawnPopup(prefab);
             _popup.Initialize();
@@ -40,7 +40,7 @@ namespace ACore
             return (T)_popup;
         }
 
-        private PopupBehaviour SpawnPopup(PopupBehaviour prefab)
+        private static PopupBehaviour SpawnPopup(PopupBehaviour prefab)
         {
             switch (prefab)
             {
@@ -62,7 +62,7 @@ namespace ACore
             return Object.Instantiate(prefab, Game.Manager.Canvas);
         }
 
-        public void RemoveOnLoaded(bool withGlobal = false)
+        public static void RemoveOnLoaded(bool withGlobal = false)
         {
             foreach (var _popup in active.Values.ToArray())
             {
@@ -73,7 +73,7 @@ namespace ACore
             }
         }
         
-        public bool Remove<T>() where T : PopupBehaviour 
+        public static bool Remove<T>() where T : PopupBehaviour 
         {
             if (TryGet<T>(out var _popup))
             {
@@ -84,7 +84,7 @@ namespace ACore
             return false;
         }
         
-        public bool Remove(PopupBehaviour popup) 
+        public static bool Remove(PopupBehaviour popup) 
         {
             if (active.ContainsKey(popup.GetType()))
             {
@@ -95,12 +95,12 @@ namespace ACore
             return false;
         }
         
-        public bool IsActive<T>() where T : PopupBehaviour
+        public static bool IsActive<T>() where T : PopupBehaviour
         {
             return active.ContainsKey(typeof(T));
         }
 
-        public bool TryGet<T>(out T popup) where T : PopupBehaviour
+        public static bool TryGet<T>(out T popup) where T : PopupBehaviour
         {
             if (IsActive<T>())
             {
@@ -112,7 +112,7 @@ namespace ACore
             return false;
         }
         
-        public T Get<T>() where T : PopupBehaviour
+        public static T Get<T>() where T : PopupBehaviour
         {
             TryGet<T>(out var _popup);
             return _popup;

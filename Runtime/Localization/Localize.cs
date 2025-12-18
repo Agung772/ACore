@@ -14,7 +14,8 @@ namespace ACore
             AssetCache.Clear();
             
             var _localize = Resources.Load<TextAsset>("Localize");
-            var _parses = _localize.ParseCsv(Game.GetStorage<ACoreStorage>().language);
+            if (_localize == null) return;
+            var _parses = _localize.ParseCsv(Storage.Get<ACoreStorage>().language);
             foreach (var _parse in _parses)
             {
                 GlobalText[_parse.Key] = _parse.Value;
@@ -37,7 +38,7 @@ namespace ACore
 
             if (!AssetCache.TryGetValue(asset, out var _dict))
             {
-                _dict = asset.ParseCsv(Game.GetStorage<ACoreStorage>().language);
+                _dict = asset.ParseCsv(Storage.Get<ACoreStorage>().language);
                 AssetCache[asset] = _dict;
             }
 

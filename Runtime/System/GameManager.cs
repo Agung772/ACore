@@ -58,10 +58,7 @@ namespace ACore
         {
             if (pauseStatus)
             {
-                if (Game.TryGet<Storage>(out var _storage))
-                {
-                    _storage.Save();
-                }
+                Storage.Save();
             }
         }
     }
