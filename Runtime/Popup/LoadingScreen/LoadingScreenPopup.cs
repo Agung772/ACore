@@ -10,9 +10,9 @@ namespace ACore
             Time.timeScale = 0f;
         }
 
-        public override void Close()
+        public override void OnClose()
         {
-            base.Close();
+            base.OnClose();
             Time.timeScale = 1f;
         }
     }

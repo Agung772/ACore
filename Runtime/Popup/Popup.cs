@@ -77,7 +77,7 @@ namespace ACore
         {
             if (TryGet<T>(out var _popup))
             {
-                _popup.Close(); 
+                _popup.OnClose(); 
                 return true;
             }
             
@@ -88,7 +88,7 @@ namespace ACore
         {
             if (active.ContainsKey(popup.GetType()))
             {
-                popup.Close();
+                popup.OnClose();
                 return true;
             }
             

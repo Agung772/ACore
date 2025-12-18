@@ -23,16 +23,16 @@ namespace ACore
         {
             if (closeBtn)
             {
-                closeBtn.onClick.AddListener(Close);
+                closeBtn.onClick.AddListener(OnClose);
             }
 
             if (autoClose)
             {
-                gameObject.LeanDelayedCall(closeAfter, Close).setIgnoreTimeScale(useUnScaledTime);
+                gameObject.LeanDelayedCall(closeAfter, OnClose).setIgnoreTimeScale(useUnScaledTime);
             }
         }
     
-        public virtual void Close()
+        public virtual void OnClose()
         {
             onClose?.Invoke();
             Popup.active.Remove(GetType());
