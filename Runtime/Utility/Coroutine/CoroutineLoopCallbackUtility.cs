@@ -20,7 +20,7 @@ namespace ACore
         {
             while (true)
             {
-                if (key == null || !Coroutines.ContainsKey(key))
+                if (key == null)
                 {
                     Coroutines.Remove(key);
                     yield break;
