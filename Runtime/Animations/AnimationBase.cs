@@ -60,7 +60,7 @@ namespace ACore.Animation
         {
             if (descr != null && descr.uniqueId > 0)
             {
-                LeanTween.cancel(descr.uniqueId);
+                gameObject.LeanCancel(descr.uniqueId);
             }
             descr = null;
         }
