@@ -31,6 +31,13 @@ namespace ACore
                 gameObject.LeanDelayedCall(closeAfter, OnClose).setIgnoreTimeScale(useUnScaledTime);
             }
         }
+
+        public virtual void HideAndShow<T>() where T : PopupBehaviour
+        {
+            gameObject.SetActive(false);
+            var _newPopup = Popup.Show<T>();
+            _newPopup.onClose += () => gameObject.SetActive(true);
+        }
     
         public virtual void OnClose()
         {
