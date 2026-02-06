@@ -32,11 +32,12 @@ namespace ACore
             }
         }
 
-        public virtual void HideAndShow<T>() where T : PopupBehaviour
+        public virtual T HideAndShow<T>() where T : PopupBehaviour
         {
             gameObject.SetActive(false);
             var _newPopup = Popup.Show<T>();
             _newPopup.onClose += () => gameObject.SetActive(true);
+            return _newPopup;
         }
     
         public virtual void OnClose()
