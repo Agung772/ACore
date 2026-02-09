@@ -57,7 +57,8 @@ namespace ACore.Google
             
             if (!checkConnection || await GameNetwork.IsInternetConnection())
             {
-                data = new BannerView(Game.Get<AdManager>().Setting.bannerID, AdSize.Banner, AdPosition.Top);
+                var _setting = Game.GetSO<ASettingData>().googlePlay;
+                data = new BannerView(_setting.bannerID, AdSize.Banner, AdPosition.Top);
                 data.OnBannerAdLoaded += BannerAdLoaded;
             
                 var _request = new AdRequest();

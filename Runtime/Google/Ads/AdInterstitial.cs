@@ -17,7 +17,8 @@ namespace ACore.Google
         {
             var _adRequest = new AdRequest();
 
-            InterstitialAd.Load(Game.Get<AdManager>().Setting.interstitialID, _adRequest,
+            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            InterstitialAd.Load(_setting.interstitialID, _adRequest,
                 (ad, error) =>
                 {
                     if (error != null || ad == null)

@@ -24,7 +24,8 @@ namespace ACore.Google
         {
             var _request = new AdRequest();
 
-            RewardedAd.Load(Game.Get<AdManager>().Setting.rewardedID, _request, (RewardedAd ad, LoadAdError error) =>
+            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            RewardedAd.Load(_setting.rewardedID, _request, (RewardedAd ad, LoadAdError error) =>
             {
                 if (error != null || ad == null)
                 {

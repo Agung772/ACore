@@ -15,12 +15,10 @@ namespace ACore.Google
         private int countTryAgain;
         public event Action OnInitialize;
         private Dictionary<Type, PlayGamesBase> instances = new();
-        public GoogleSetting Setting { get; private set; }
 
         public override void Initialize()
         {
-            Setting = Resources.Load<GoogleSetting>("GoogleSetting");
-            if (Setting == null) return;
+            if (!Game.GetSO<ASettingData>().isGooglePlay) return;
             
             PlayGamesPlatform.Activate();
             RequestPlayGames(() =>

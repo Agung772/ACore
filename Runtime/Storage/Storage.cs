@@ -80,6 +80,7 @@ namespace ACore
                 Debug.LogWarning("Storage data not found");
                 foreach (var _storage in storages.Values)
                 {
+                    _storage.OnDefault();
                     _storage.OnLoad();
                 }
             }

@@ -11,13 +11,14 @@ namespace ACore.Google
     {
         private bool hasInitialize;
         private Dictionary<Type, AdBase> instances = new();
-        public GoogleSetting Setting { get; private set; }
 
         public override void Initialize()
         {
-            Setting = Resources.Load<GoogleSetting>("GoogleSetting");
-            if (Setting == null) return;
-            if (Setting.noAds) return;
+            var _setting = Game.GetSO<ASettingData>();
+            if (!_setting.isGooglePlay) return;
+            
+            var _googleSetting = _setting.googlePlay;
+            if (_googleSetting.noAds) return;
             
             MobileAds.Initialize(_=> 
             {
