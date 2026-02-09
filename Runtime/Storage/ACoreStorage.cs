@@ -5,7 +5,7 @@ namespace ACore
     public class ACoreStorage : BaseStorage
     {
         public string language;
-        public int fps;
+        public FPSLimit FPS;
 
         public override void OnDefault()
         {
@@ -15,13 +15,13 @@ namespace ACore
                 language = Localize.GetDefault();
             }
             
-            fps = _setting.FPS.ToValue();
+            FPS = _setting.FPS;
         }
 
         public override void OnLoad()
         {
             Localize.Initialize();
-            FPSManager.Set(fps);
+            FPSManager.Set(FPS);
         }
     }
 }
