@@ -10,11 +10,7 @@ namespace ACore
         public override void OnDefault()
         {
             var _setting = Game.GetSO<ASettingData>();
-            if (string.IsNullOrEmpty(_setting.language))
-            {
-                language = Localize.GetDefault();
-            }
-            
+            language = string.IsNullOrEmpty(_setting.language) ? Localize.GetDefault() : _setting.language;
             FPS = _setting.FPS;
         }
 
