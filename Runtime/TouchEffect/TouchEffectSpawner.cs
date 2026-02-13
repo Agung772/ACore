@@ -6,7 +6,7 @@ namespace ACore
     {
         public override void PostInitialize()
         {
-            if (Popup.resources.ContainsKey(typeof(TouchEffect)))
+            if (Popup.Resources.ContainsKey(typeof(TouchEffect)))
             {
                 Game.Manager.OnUpdate += OnUpdate;
             }

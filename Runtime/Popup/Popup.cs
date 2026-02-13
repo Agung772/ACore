@@ -8,21 +8,21 @@ namespace ACore
 {
     public static class Popup
     {
-        public static Dictionary<Type, PopupBehaviour> active = new();
-        public static Dictionary<Type, PopupBehaviour> resources = new();
+        public static readonly Dictionary<Type, PopupBehaviour> Active = new();
+        public static readonly Dictionary<Type, PopupBehaviour> Resources = new();
 
         public static void Initialize()
         {
-            var _popups = Resources.LoadAll<PopupBehaviour>("");
+            var _popups = UnityEngine.Resources.LoadAll<PopupBehaviour>("");
             foreach (var _popup in _popups)
             {
-                resources.Add(_popup.GetType(), _popup);
+                Resources.Add(_popup.GetType(), _popup);
             }
         }
 
         public static T Show<T>() where T : PopupBehaviour
         {
-            var _prefab = (T)resources[typeof(T)];
+            var _prefab = (T)Resources[typeof(T)];
             return Show(_prefab);
         }
 
@@ -34,10 +34,21 @@ namespace ACore
             if (_popup is not MultiPopupBehaviour
                 && _popup is not WorldPopupBehaviour)
             {
-                active.Add(_popup.GetType(), _popup);
+                Active.Add(_popup.GetType(), _popup);
             }
 
             return (T)_popup;
+        }
+        
+        public static bool TryShow<T>(out T popup) where T : PopupBehaviour
+        {
+            if (IsActive<T>())
+            {
+                Show<T>();
+            }
+
+            popup = null;
+            return false;
         }
 
         private static PopupBehaviour SpawnPopup(PopupBehaviour prefab)
@@ -64,7 +75,7 @@ namespace ACore
 
         public static void RemoveOnLoaded(bool withGlobal = false)
         {
-            foreach (var _popup in active.Values.ToArray())
+            foreach (var _popup in Active.Values.ToArray())
             {
                 if (withGlobal || !_popup.isGlobal)
                 {
@@ -86,7 +97,7 @@ namespace ACore
         
         public static bool Remove(PopupBehaviour popup) 
         {
-            if (active.ContainsKey(popup.GetType()))
+            if (Active.ContainsKey(popup.GetType()))
             {
                 popup.OnClose();
                 return true;
@@ -97,14 +108,14 @@ namespace ACore
         
         public static bool IsActive<T>() where T : PopupBehaviour
         {
-            return active.ContainsKey(typeof(T));
+            return Active.ContainsKey(typeof(T));
         }
 
         public static bool TryGet<T>(out T popup) where T : PopupBehaviour
         {
             if (IsActive<T>())
             {
-                popup = active[typeof(T)] as T;
+                popup = Active[typeof(T)] as T;
                 return true;
             }
             
