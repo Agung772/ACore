@@ -42,7 +42,7 @@ namespace ACore
         
         public static bool TryShow<T>(out T popup) where T : PopupBehaviour
         {
-            if (IsActive<T>())
+            if (!IsActive<T>())
             {
                 Show<T>();
             }
