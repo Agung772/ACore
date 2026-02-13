@@ -44,7 +44,8 @@ namespace ACore
         {
             if (!IsActive<T>())
             {
-                Show<T>();
+                popup = Show<T>(); 
+                return true;
             }
 
             popup = null;
