@@ -13,8 +13,7 @@ namespace ACore.Animation
         private SpriteRenderer spriteRenderer;
         private Image image;
         private Renderer meshRenderer;
-        private Material meshMat;
-
+        private Material[] meshMats;
         private bool meshTransparentPrepared;
 
         private void Awake()
@@ -22,20 +21,46 @@ namespace ACore.Animation
             spriteRenderer = GetComponent<SpriteRenderer>();
             image = GetComponent<Image>();
             meshRenderer = GetComponent<Renderer>();
-            if (meshRenderer)
-            {
-                meshMat = meshRenderer.material;
-            }
 
-            if (isFrom && !base.autoPlay)
+            if (meshRenderer)
+                meshMats = meshRenderer.materials;
+
+            if (isFrom && !autoPlay)
+                ApplyColorInstant(from);
+        }
+
+        private void ApplyColorInstant(Color color)
+        {
+            if (spriteRenderer) spriteRenderer.color = color;
+            else if (image) image.color = color;
+            else if (meshMats != null)
             {
-                if (spriteRenderer) spriteRenderer.color = from;
-                else if (image) image.color = from;
-                else if (meshRenderer)
-                {
-                    meshMat.color = from;
-                }
+                foreach (var _mat in meshMats)
+                    SetMaterialColor(_mat, color);
             }
+        }
+
+        private void SetMaterialColor(Material mat, Color color)
+        {
+            if (mat.HasProperty("_BaseColor"))
+                mat.SetColor("_BaseColor", color);
+            else if (mat.HasProperty("_Color"))
+                mat.SetColor("_Color", color);
+        }
+
+        private Color GetCurrentColor()
+        {
+            if (meshMats == null || meshMats.Length == 0)
+                return Color.white;
+
+            var _mat = meshMats[0];
+
+            if (_mat.HasProperty("_BaseColor"))
+                return _mat.GetColor("_BaseColor");
+            if (_mat.HasProperty("_Color"))
+                return _mat.GetColor("_Color");
+
+            return Color.white;
         }
 
         private bool NeedTransparency()
@@ -46,50 +71,59 @@ namespace ACore.Animation
 
         private void PrepareMeshTransparencyIfNeeded()
         {
-            if (!meshRenderer || meshTransparentPrepared) return;
-            if (meshMat.color.a < 1f)
-            {
-                meshTransparentPrepared = true;
-                return;
-            }
+            if (meshMats == null || meshTransparentPrepared) return;
             if (!NeedTransparency()) return;
-            
-            meshMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-            meshMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-            meshMat.SetInt("_ZWrite", 0);
-            meshMat.DisableKeyword("_ALPHATEST_ON");
-            meshMat.EnableKeyword("_ALPHABLEND_ON");
-            meshMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-            meshMat.renderQueue = 3000;
+
+            foreach (var _mat in meshMats)
+            {
+                if (_mat.HasProperty("_Surface"))
+                {
+                    _mat.SetFloat("_Surface", 1);
+                    _mat.SetFloat("_Blend", 0);
+                    _mat.SetFloat("_ZWrite", 0);
+                    _mat.renderQueue = 3000;
+                }
+                else
+                {
+                    _mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                    _mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                    _mat.SetInt("_ZWrite", 0);
+                    _mat.DisableKeyword("_ALPHATEST_ON");
+                    _mat.EnableKeyword("_ALPHABLEND_ON");
+                    _mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                    _mat.renderQueue = 3000;
+                }
+            }
 
             meshTransparentPrepared = true;
         }
 
         public override void Play()
         {
-            base.Stop();
+            Stop();
 
-            if (isFrom && base.autoPlay)
-            {
-                if (spriteRenderer) spriteRenderer.color = from;
-                else if (image) image.color = from;
-                else if (meshMat) meshMat.color = from;
-            }
+            if (isFrom && autoPlay)
+                ApplyColorInstant(from);
 
             if (spriteRenderer)
             {
-                base.descr = gameObject.LeanColor(to, time);
+                descr = gameObject.LeanColor(to, time);
             }
             else if (image)
             {
-                base.descr = image.LeanColor(to, time);
+                descr = image.LeanColor(to, time);
             }
             else if (meshRenderer)
             {
-                var _start = meshMat.color;
-                base.descr = gameObject.LeanValue(_start, to, time)
-                    .setOnUpdate(c => meshMat.color = c);
-                base.descr.setOnStart(PrepareMeshTransparencyIfNeeded);
+                var _startColor = GetCurrentColor();
+
+                descr = LeanTween.value(gameObject, _startColor, to, time)
+                    .setOnStart(PrepareMeshTransparencyIfNeeded)
+                    .setOnUpdate(c =>
+                    {
+                        foreach (var _mat in meshMats)
+                            SetMaterialColor(_mat, c);
+                    });
             }
 
             base.Play();
@@ -97,29 +131,35 @@ namespace ACore.Animation
 
         public override void ToDefault(bool fasted = false)
         {
-            base.Stop();
+            Stop();
 
             if (!isFrom)
-            {
-                Debug.LogWarning("To Default not available because it is not from.");
                 return;
-            }
 
             if (fasted)
             {
-                if (spriteRenderer) spriteRenderer.color = from;
-                else if (image) image.color = from;
-                else if (meshMat) meshMat.color = from;
+                ApplyColorInstant(from);
             }
             else
             {
-                if (spriteRenderer) base.descr = gameObject.LeanColor(from, time);
-                else if (image) base.descr = image.LeanColor(from, time);
-                else if (meshMat)
+                if (spriteRenderer)
                 {
-                    var _cur = meshMat.color;
-                    base.descr = LeanTween.value(gameObject, _cur, from, time)
-                        .setOnUpdate(c => meshMat.color = c);
+                    descr = gameObject.LeanColor(from, time);
+                }
+                else if (image)
+                {
+                    descr = image.LeanColor(from, time);
+                }
+                else if (meshRenderer)
+                {
+                    var _current = GetCurrentColor();
+
+                    descr = LeanTween.value(gameObject, _current, from, time)
+                        .setOnUpdate(c =>
+                        {
+                            foreach (var _mat in meshMats)
+                                SetMaterialColor(_mat, c);
+                        });
                 }
             }
 
