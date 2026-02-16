@@ -17,11 +17,13 @@ namespace ACore.Animation
             canvasGroup = GetComponent<CanvasGroup>();
             worldCanvasGroup = GetComponent<WorldCanvasGroup>();
             
-            if (isFrom && !autoPlay) ApplyValueInstant();
+            ApplyValueInstant();
         }
         
         private void ApplyValueInstant()
         {
+            if (!isFrom && !autoPlay) return;
+            
             if (canvasGroup) canvasGroup.alpha = from;
             if (worldCanvasGroup) worldCanvasGroup.alpha = from;
         }
