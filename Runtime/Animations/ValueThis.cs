@@ -6,8 +6,8 @@ namespace ACore.Animation
     public class ValueThis : AnimationTimeBase
     {
         [SerializeField] private bool isFrom;
-        [SerializeField, ShowIf(nameof(isFrom))] private float from;
-        [SerializeField] private float to = 1;
+        [SerializeField, ShowIf(nameof(isFrom)), MinMaxSlider(0, 1)] private float from;
+        [SerializeField, MinMaxSlider(0, 1)] private float to = 1;
         
         private CanvasGroup canvasGroup;
         private WorldCanvasGroup worldCanvasGroup;
