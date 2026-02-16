@@ -68,6 +68,7 @@ namespace ACore.Animation
         public virtual void ToDefault(bool fasted = false)
         {
             descr.setIgnoreTimeScale(useUnScaledTime);
+            descr.setOnComplete(() => onComplete?.Invoke());
         }
     }
 }
