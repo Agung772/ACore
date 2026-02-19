@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 namespace ACore
 {
@@ -27,11 +26,7 @@ namespace ACore
     
         public static string ToSpace(this Enum enumValue)
         {
-            var _result = enumValue.ToString();
-            if (string.IsNullOrEmpty(_result)) return _result;
-
-            return string.Concat(_result.Select((ch, i) => 
-                i > 0 && char.IsUpper(ch) ? " " + ch : ch.ToString()));
+            return enumValue.ToString().ToSpace();
         }
     }
 }
