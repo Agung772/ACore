@@ -64,7 +64,7 @@ namespace ACore
 
             if (prefab.setOrder)
             {
-                var _parentPopup = parent != null ? parent : Game.Manager.transform;
+                var _parentPopup = parent ? parent : Game.Manager.transform;
                 var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, _parentPopup);
                 _canvas.GetComponent<Canvas>().sortingOrder = prefab.sortOrder;
                 var _popup = Object.Instantiate(prefab, _canvas);
