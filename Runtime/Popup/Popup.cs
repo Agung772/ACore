@@ -20,15 +20,15 @@ namespace ACore
             }
         }
 
-        public static T Show<T>() where T : PopupBehaviour
+        public static T Show<T>(Transform parent = null) where T : PopupBehaviour
         {
             var _prefab = (T)Resources[typeof(T)];
-            return Show(_prefab);
+            return Show(_prefab, parent);
         }
 
-        public static T Show<T>(T prefab) where T : PopupBehaviour
+        public static T Show<T>(T prefab, Transform parent = null) where T : PopupBehaviour
         {
-            var _popup = SpawnPopup(prefab);
+            var _popup = SpawnPopup(prefab, parent);
             _popup.Initialize();
 
             if (_popup is not MultiPopupBehaviour
@@ -40,11 +40,11 @@ namespace ACore
             return (T)_popup;
         }
         
-        public static bool TryShow<T>(out T popup) where T : PopupBehaviour
+        public static bool TryShow<T>(out T popup, Transform parent = null) where T : PopupBehaviour
         {
             if (!IsActive<T>())
             {
-                popup = Show<T>(); 
+                popup = Show<T>(parent); 
                 return true;
             }
 
@@ -52,19 +52,20 @@ namespace ACore
             return false;
         }
 
-        private static PopupBehaviour SpawnPopup(PopupBehaviour prefab)
+        private static PopupBehaviour SpawnPopup(PopupBehaviour prefab, Transform parent = null)
         {
             switch (prefab)
             {
                 case WorldPopupBehaviour:
-                    return Object.Instantiate(prefab).GetComponent<PopupBehaviour>();
+                    return parent ? Object.Instantiate(prefab, parent) : Object.Instantiate(prefab);
                 case TouchEffect:
                     return Object.Instantiate(prefab, Game.Manager.FrontCanvas);
             }
 
             if (prefab.setOrder)
             {
-                var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, Game.Manager.transform);
+                var _parentPopup = parent != null ? parent : Game.Manager.transform;
+                var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, _parentPopup);
                 _canvas.GetComponent<Canvas>().sortingOrder = prefab.sortOrder;
                 var _popup = Object.Instantiate(prefab, _canvas);
                 _popup.onClose += () => Object.Destroy(_canvas.gameObject);
