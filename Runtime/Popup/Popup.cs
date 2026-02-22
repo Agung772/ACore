@@ -64,15 +64,14 @@ namespace ACore
 
             if (prefab.setOrder)
             {
-                var _parentPopup = parent ? parent : Game.Manager.transform;
-                var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, _parentPopup);
+                var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, parent ? parent : Game.Manager.transform);
                 _canvas.GetComponent<Canvas>().sortingOrder = prefab.sortOrder;
                 var _popup = Object.Instantiate(prefab, _canvas);
                 _popup.onClose += () => Object.Destroy(_canvas.gameObject);
                 return _popup;
             }
             
-            return Object.Instantiate(prefab, Game.Manager.Canvas);
+            return Object.Instantiate(prefab, parent ? parent : Game.Manager.Canvas);
         }
 
         public static void RemoveOnLoaded(bool withGlobal = false)
