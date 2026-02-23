@@ -56,5 +56,10 @@ namespace ACore
 
             return _sum / transforms.Length;
         }
+
+        public static void ApplyPose(this Transform target, Pose pose)
+        {
+            target.SetPositionAndRotation(pose.position, pose.rotation);
+        }
     }
 }
