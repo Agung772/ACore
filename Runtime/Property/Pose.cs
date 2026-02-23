@@ -1,7 +1,9 @@
+using System;
 using UnityEngine;
 
 namespace ACore
 {
+    [Serializable]
     public struct Pose
     {
         [PickFromScene] public Vector3 position;
@@ -25,7 +27,6 @@ namespace ACore
             rotation = default;
         }
         
-                
         public Pose(Transform transform)
         {
             this.position = transform.position;
