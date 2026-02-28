@@ -4,74 +4,46 @@ using UnityEngine.EventSystems;
 
 namespace ACore
 {
-    public class PointerButton : MonoBehaviour,
-        IPointerDownHandler,
-        IPointerUpHandler,
-        IPointerClickHandler,
-        IBeginDragHandler,
-        IDragHandler,
-        IEndDragHandler,
-        IPointerEnterHandler,
-        IPointerExitHandler
+    [AddComponentMenu("Event/Pointer Button")]
+    public class PointerButton : EventTrigger
     {
-        public UnityEvent onPointerDown;
-        public UnityEvent onPointerUp;
-        public UnityEvent onPointerClick;
-        public UnityEvent onBeginDrag;
-        public UnityEvent onDrag;
-        public UnityEvent onEndDrag;
-        public UnityEvent onPointerEnter;
-        public UnityEvent onPointerExit;
-        public UnityEvent onPointerHold;
-
-        private bool isHolding;
-
-        public void OnPointerDown(PointerEventData eventData)
+        public void AddListener(EventTriggerType id, UnityAction<BaseEventData> action)
         {
-            isHolding = true;
-            onPointerDown?.Invoke();
+            var _entry = GetOrCreateEntry(id);
+            _entry.callback.AddListener(action);
         }
 
-        public void OnPointerUp(PointerEventData eventData)
+        public TriggerEvent GetTriggerEvent(EventTriggerType id)
         {
-            isHolding = false;
-            onPointerUp?.Invoke();
+            return GetOrCreateEntry(id).callback;
         }
 
-        public void OnPointerClick(PointerEventData eventData)
+        public void RemoveListener(EventTriggerType id, UnityAction<BaseEventData> action)
         {
-            onPointerClick?.Invoke();
+            var _entry = triggers.Find(e => e.eventID == id);
+            _entry?.callback.RemoveListener(action);
         }
 
-        public void OnBeginDrag(PointerEventData eventData)
+        public void RemoveAllListeners(EventTriggerType id)
         {
-            onBeginDrag?.Invoke();
+            var _entry = triggers.Find(e => e.eventID == id);
+            _entry?.callback.RemoveAllListeners();
         }
 
-        public void OnDrag(PointerEventData eventData)
+        private Entry GetOrCreateEntry(EventTriggerType id)
         {
-            onDrag?.Invoke();
-        }
+            var _entry = triggers.Find(e => e.eventID == id);
+            if (_entry != null)
+                return _entry;
 
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            onEndDrag?.Invoke();
-        }
+            _entry = new Entry
+            {
+                eventID = id,
+                callback = new TriggerEvent()
+            };
 
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            onPointerEnter?.Invoke();
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            onPointerExit?.Invoke();
-        }
-
-        private void Update()
-        {
-            if (isHolding)
-                onPointerHold?.Invoke();
+            triggers.Add(_entry);
+            return _entry;
         }
     }
 }
