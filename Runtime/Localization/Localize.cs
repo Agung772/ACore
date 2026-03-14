@@ -22,17 +22,32 @@ namespace ACore
             }
         }
 
-        public static string GetText(string key)
+        /// <summary>
+        /// Contoh CSV:
+        /// HELLO_NAME,Hello {0}
+        ///
+        /// Contoh pemanggilan:
+        /// Localize.GetText("HELLO_NAME", "Agung")
+        /// -> "Hello Agung"
+        ///
+        /// Placeholder menggunakan format:
+        /// {0} = parameter pertama
+        /// {1} = parameter kedua
+        /// </summary>
+        public static string GetText(string key, params object[] placeholder)
         {
             if (GlobalText.TryGetValue(key, out var _val))
             {
+                if (placeholder != null && placeholder.Length > 0)
+                    return string.Format(_val, placeholder);
+
                 return _val;
             }
 
             return key;
         }
         
-        public static string GetText(this TextAsset asset, string key)
+        public static string GetText(this TextAsset asset, string key, params object[] placeholder)
         {
             if (asset == null) return key;
 
@@ -44,8 +59,12 @@ namespace ACore
 
             if (_dict.TryGetValue(key, out var _val))
             {
+                if (placeholder != null && placeholder.Length > 0)
+                    return string.Format(_val, placeholder);
+
                 return _val;
             }
+
             return key;
         }
         
