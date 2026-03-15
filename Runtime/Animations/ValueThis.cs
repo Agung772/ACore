@@ -19,7 +19,13 @@ namespace ACore.Animation
             
             ApplyValueInstant();
         }
-        
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            ApplyValueInstant();
+        }
+
         private void ApplyValueInstant()
         {
             if (!isFrom && !autoPlay) return;
