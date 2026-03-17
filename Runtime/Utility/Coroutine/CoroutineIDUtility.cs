@@ -7,29 +7,37 @@ namespace ACore
 {
     public static partial class CoroutineUtility
     {
-        public static Dictionary<GameObject, Dictionary<string, Coroutine>> CoroutinesWithID = new ();
+        public static Dictionary<GameObject, Dictionary<string, List<Coroutine>>> CoroutinesWithID = new();
 
         private static void TryAddCoroutine(GameObject key, string id, Coroutine routine)
         {
             if (!CoroutinesWithID.TryGetValue(key, out var _dict))
             {
-                _dict = new Dictionary<string, Coroutine>();
+                _dict = new Dictionary<string, List<Coroutine>>();
                 CoroutinesWithID[key] = _dict;
             }
 
-            if (_dict.TryGetValue(id, out var _existing) && _existing != null)
+            if (!_dict.TryGetValue(id, out var _list))
             {
-                Game.Manager.StopCoroutine(_existing);
+                _list = new List<Coroutine>();
+                _dict[id] = _list;
             }
 
-            _dict[id] = routine;
+            _list.Add(routine);
         }
 
-        private static void RemoveCoroutine(GameObject key, string id)
+        private static void RemoveCoroutine(GameObject key, string id, Coroutine routine)
         {
             if (!CoroutinesWithID.TryGetValue(key, out var _dict)) return;
-            _dict.Remove(id);
-            if (_dict.Count == 0) CoroutinesWithID.Remove(key);
+            if (!_dict.TryGetValue(id, out var _list)) return;
+
+            _list.Remove(routine);
+
+            if (_list.Count == 0)
+                _dict.Remove(id);
+
+            if (_dict.Count == 0)
+                CoroutinesWithID.Remove(key);
         }
 
         private static Coroutine ExecuteCoroutine(GameObject key, string id, IEnumerator routine)
@@ -39,7 +47,7 @@ namespace ACore
             IEnumerator Wrapper()
             {
                 yield return routine;
-                RemoveCoroutine(key, id);
+                RemoveCoroutine(key, id, _handle);
             }
 
             _handle = Game.Manager.StartCoroutine(Wrapper());
@@ -56,19 +64,25 @@ namespace ACore
         {
             if (Game.Manager == null) return;
             if (!CoroutinesWithID.TryGetValue(key, out var _dict)) return;
+            if (!_dict.TryGetValue(id, out var _list)) return;
 
-            if (_dict.TryGetValue(id, out var _coroutine) && _coroutine != null)
+            foreach (var _coroutine in _list)
             {
-                Game.Manager.StopCoroutine(_coroutine);
-                _dict.Remove(id);
+                if (_coroutine != null)
+                    Game.Manager.StopCoroutine(_coroutine);
             }
 
-            if (_dict.Count == 0) CoroutinesWithID.Remove(key);
+            _dict.Remove(id);
+
+            if (_dict.Count == 0)
+                CoroutinesWithID.Remove(key);
         }
 
         public static bool IsCoroutine(this GameObject key, string id)
         {
-            return CoroutinesWithID.TryGetValue(key, out var _dict) && _dict.ContainsKey(id);
+            return CoroutinesWithID.TryGetValue(key, out var _dict) &&
+                   _dict.TryGetValue(id, out var _list) &&
+                   _list.Count > 0;
         }
     }
 }

@@ -61,9 +61,9 @@ namespace ACore
         {
             if (Game.Manager == null) return;
 
-            if (Coroutines.TryGetValue(key, out var _list))
+            if (Coroutines.TryGetValue(key, out var _routines))
             {
-                foreach (var _routine in _list)
+                foreach (var _routine in _routines)
                 {
                     if (_routine != null)
                     {
@@ -77,11 +77,18 @@ namespace ACore
             {
                 foreach (var _kvp in _dict)
                 {
-                    if (_kvp.Value != null)
+                    var _list = _kvp.Value;
+                    if (_list == null) continue;
+
+                    foreach (var _coroutine in _list)
                     {
-                        Game.Manager.StopCoroutine(_kvp.Value);
+                        if (_coroutine != null)
+                        {
+                            Game.Manager.StopCoroutine(_coroutine);
+                        }
                     }
                 }
+
                 CoroutinesWithID.Remove(key);
             }
         }
