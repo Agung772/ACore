@@ -13,10 +13,15 @@ namespace ACore.Google
 
         public override void Initialize()
         {
+            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            if (_setting.noBanner) return;
+            
             Request(checkConnection: false);
             Game.Manager.StartCoroutine(Refresh());
-            Game.Get<SceneLoader>().OnLoaded += Show;
-            Game.Get<SceneLoader>().OnUnloaded += Hide;
+
+            var _sceneLoader = Game.Get<SceneLoader>();
+            _sceneLoader.OnLoaded += Show;
+            _sceneLoader.OnUnloaded += Hide;
         }
 
         public override bool CanShow()

@@ -55,12 +55,14 @@ namespace ACore
         public static void LeanCancel(this GameObject go, string id)
         {
             if (!TweensWithID.TryGetValue(go, out var _dict)) return;
-            if (!_dict.TryGetValue(id, out var _list)) return;
+            if (!_dict.TryGetValue(id, out var _list) || _list.Count == 0) return;
 
             foreach (var _tween in _list)
             {
-                if (_tween != null)
-                    LeanTween.cancel(_tween.uniqueId);
+                if (_tween != null && _tween.trans != null)
+                {
+                    LeanTween.cancel(_tween.trans.gameObject);
+                }
             }
 
             _dict.Remove(id);
