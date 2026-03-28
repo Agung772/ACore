@@ -99,7 +99,7 @@ namespace ACore.Editor
 
         private bool ShowFolderField() => !processAllAssets;
 
-        [MenuItem("Gamecore/Texture 2D Converted")]
+        [MenuItem("Tools/ACore/Texture 2D Converted")]
         private static void OpenWindow()
         {
             GetWindow<FormatAssetTool>().Show();

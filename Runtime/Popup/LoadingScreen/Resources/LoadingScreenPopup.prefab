@@ -93,12 +93,16 @@ MonoBehaviour:
   isLoop: 1
   loopCount: -1
   loopType: 36
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  startDelay: 0
+  time: 2
+  type: 0
   isFrom: 0
   from: {x: 0, y: 0, z: 0}
   to: {x: 0, y: 0, z: -360}
   add: 360
-  time: 2
-  type: 0
 --- !u!1 &6899588533873286470
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,4 +233,5 @@ MonoBehaviour:
   sortOrder: 2
   autoClose: 0
   closeAfter: 0
+  useUnScaledTime: 0
   closeBtn: {fileID: 0}
