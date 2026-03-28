@@ -7,10 +7,10 @@ namespace ACore
     [Serializable, InlineProperty]
     public struct Vector3Range
     {
-        [HorizontalGroup("Range")]
+        [VerticalGroup("Range")]
         public Vector3 min;
 
-        [HorizontalGroup("Range")]
+        [VerticalGroup("Range")]
         public Vector3 max;
 
         public void Set(Vector3 minValue, Vector3 maxValue)
