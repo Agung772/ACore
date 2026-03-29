@@ -6,11 +6,9 @@ using Sirenix.OdinInspector;
 namespace ACore
 {
     [Serializable]
-    public struct Random<T>
+    public class Random<T>
     {
-        [SerializeReference]
-        [HideLabel]
-        [InlineProperty]
+        [SerializeReference] [HideLabel] [InlineProperty]
         public RandomBase value;
 
         public T Get()
