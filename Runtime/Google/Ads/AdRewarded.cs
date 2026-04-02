@@ -9,6 +9,7 @@ namespace ACore.Google
     public class AdRewarded : AdBase
     {
         private RewardedAd data;
+        public event Action OnReady;
 
         public override void Initialize()
         {
@@ -35,6 +36,7 @@ namespace ACore.Google
                 
                 data = ad;
                 data.OnAdFullScreenContentClosed += Request;
+                OnReady?.Invoke();
             });
         }
         
