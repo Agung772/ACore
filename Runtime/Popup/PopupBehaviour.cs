@@ -39,6 +39,12 @@ namespace ACore
             _newPopup.onClose += () => gameObject.SetActive(true);
             return _newPopup;
         }
+        
+        public virtual T RemoveAndShow<T>() where T : PopupBehaviour
+        {
+            OnClose();
+            return Popup.Show<T>();
+        }
     
         public virtual void OnClose()
         {
