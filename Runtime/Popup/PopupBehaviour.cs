@@ -35,7 +35,7 @@ namespace ACore
         public virtual T HideAndShow<T>() where T : PopupBehaviour
         {
             gameObject.SetActive(false);
-            var _newPopup = Popup.Show<T>();
+            var _newPopup = POPUP.Show<T>();
             _newPopup.onClose += () => gameObject.SetActive(true);
             return _newPopup;
         }
@@ -43,13 +43,13 @@ namespace ACore
         public virtual T RemoveAndShow<T>() where T : PopupBehaviour
         {
             OnClose();
-            return Popup.Show<T>();
+            return POPUP.Show<T>();
         }
     
         public virtual void OnClose()
         {
             onClose?.Invoke();
-            Popup.Active.Remove(GetType());
+            POPUP.Active.Remove(GetType());
             Destroy(gameObject);
         }
     }

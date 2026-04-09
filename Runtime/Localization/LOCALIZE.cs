@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ACore
 {
-    public static class Localize
+    public static class LOCALIZE
     {
         private static readonly Dictionary<string, string> GlobalText = new();
         private static readonly Dictionary<TextAsset, Dictionary<string, string>> AssetCache = new();
@@ -15,7 +15,7 @@ namespace ACore
             
             var _localize = Resources.Load<TextAsset>("Localize");
             if (_localize == null) return;
-            var _parses = _localize.ParseCsv(Storage.Get<ACoreStorage>().language);
+            var _parses = _localize.ParseCsv(STORAGE.Get<ACoreStorage>().language);
             foreach (var _parse in _parses)
             {
                 GlobalText[_parse.Key] = _parse.Value;
@@ -53,7 +53,7 @@ namespace ACore
 
             if (!AssetCache.TryGetValue(asset, out var _dict))
             {
-                _dict = asset.ParseCsv(Storage.Get<ACoreStorage>().language);
+                _dict = asset.ParseCsv(STORAGE.Get<ACoreStorage>().language);
                 AssetCache[asset] = _dict;
             }
 

@@ -9,14 +9,14 @@ namespace ACore
 
         public override void OnDefault()
         {
-            var _setting = Game.GetSO<ASettingData>();
-            language = string.IsNullOrEmpty(_setting.language) ? Localize.GetDefault() : _setting.language;
+            var _setting = GAME.GetSO<ASettingData>();
+            language = string.IsNullOrEmpty(_setting.language) ? LOCALIZE.GetDefault() : _setting.language;
             FPS = _setting.FPS;
         }
 
         public override void OnLoad()
         {
-            Localize.Initialize();
+            LOCALIZE.Initialize();
             FPSManager.Set(FPS);
         }
     }

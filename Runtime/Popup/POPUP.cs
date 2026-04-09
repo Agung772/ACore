@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 
 namespace ACore
 {
-    public static class Popup
+    public static class POPUP
     {
         public static readonly Dictionary<Type, PopupBehaviour> Active = new();
         public static readonly Dictionary<Type, PopupBehaviour> Resources = new();
@@ -59,19 +59,19 @@ namespace ACore
                 case WorldPopupBehaviour:
                     return parent ? Object.Instantiate(prefab, parent) : Object.Instantiate(prefab);
                 case TouchEffect:
-                    return Object.Instantiate(prefab, Game.Manager.FrontCanvas);
+                    return Object.Instantiate(prefab, GAME.Manager.FrontCanvas);
             }
 
             if (prefab.setOrder)
             {
-                var _canvas = Object.Instantiate(Game.Manager.CanvasPrefab, parent ? parent : Game.Manager.transform);
+                var _canvas = Object.Instantiate(GAME.Manager.CanvasPrefab, parent ? parent : GAME.Manager.transform);
                 _canvas.GetComponent<Canvas>().sortingOrder = prefab.sortOrder;
                 var _popup = Object.Instantiate(prefab, _canvas);
                 _popup.onClose += () => Object.Destroy(_canvas.gameObject);
                 return _popup;
             }
             
-            return Object.Instantiate(prefab, parent ? parent : Game.Manager.Canvas);
+            return Object.Instantiate(prefab, parent ? parent : GAME.Manager.Canvas);
         }
 
         public static void RemoveOnLoaded(bool withGlobal = false)

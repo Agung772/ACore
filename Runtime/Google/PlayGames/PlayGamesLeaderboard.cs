@@ -11,7 +11,7 @@ namespace ACore.Google
     {
         public void ReportScore(long skor)
         {
-            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            var _setting = GAME.GetSO<ASettingData>().googlePlay;
             Social.ReportScore(skor, _setting.leaderboardID, success =>
             {
                 Debug.Log(success ? "Skor terkirim" : "Gagal kirim skor");
@@ -27,7 +27,7 @@ namespace ACore.Google
         {
             var _tcs = new TaskCompletionSource<long>();
 
-            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            var _setting = GAME.GetSO<ASettingData>().googlePlay;
             PlayGamesPlatform.Instance.LoadScores(
                 _setting.leaderboardID,
                 LeaderboardStart.PlayerCentered,

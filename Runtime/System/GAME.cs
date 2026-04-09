@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace ACore
 {
-    public static class Game
+    public static class GAME
     {
         public static GameManager Manager { get; internal set; }
         public static string CurrentScene { get; set; }
@@ -18,7 +18,7 @@ namespace ACore
         public static void Initialize()
         {
             CreateGlobal();
-            Get<SceneLoader>().OnUnloaded += UnloadedLocal;
+            SCENE.OnUnloaded += UnloadedLocal;
         }
 
         public static IEnumerator InitializeCoroutine()
@@ -28,8 +28,8 @@ namespace ACore
         
         private static void CreateGlobal()
         {
-            Popup.Initialize();
-            Storage.Initialize();
+            POPUP.Initialize();
+            STORAGE.Initialize();
             
             globals = InstanceUtility.Create<GlobalBehaviour>();
             var _orderGlobal = OrderGlobal(globals.Values.ToArray());

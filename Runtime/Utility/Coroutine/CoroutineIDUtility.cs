@@ -50,7 +50,7 @@ namespace ACore
                 RemoveCoroutine(key, id, _handle);
             }
 
-            _handle = Game.Manager.StartCoroutine(Wrapper());
+            _handle = GAME.Manager.StartCoroutine(Wrapper());
             return _handle;
         }
 
@@ -62,14 +62,14 @@ namespace ACore
 
         public static void StopCoroutine(this GameObject key, string id)
         {
-            if (Game.Manager == null) return;
+            if (GAME.Manager == null) return;
             if (!CoroutinesWithID.TryGetValue(key, out var _dict)) return;
             if (!_dict.TryGetValue(id, out var _list)) return;
 
             foreach (var _coroutine in _list)
             {
                 if (_coroutine != null)
-                    Game.Manager.StopCoroutine(_coroutine);
+                    GAME.Manager.StopCoroutine(_coroutine);
             }
 
             _dict.Remove(id);

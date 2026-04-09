@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace ACore
 {
-    public static class Storage
+    public static class STORAGE
     {
         private const string FILE_NAME = "Save.txt";
         private static string PathFile => Path.Combine(Application.persistentDataPath, FILE_NAME);

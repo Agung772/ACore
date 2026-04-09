@@ -6,9 +6,9 @@ namespace ACore
     {
         public override void PostInitialize()
         {
-            if (Popup.Resources.ContainsKey(typeof(TouchEffect)))
+            if (POPUP.Resources.ContainsKey(typeof(TouchEffect)))
             {
-                Game.Manager.OnUpdate += OnUpdate;
+                GAME.Manager.OnUpdate += OnUpdate;
             }
         }
 
@@ -31,7 +31,7 @@ namespace ACore
 
         private void SpawnEffectUI(Vector3 screenPos)
         {
-            var _effect = Popup.Show<TouchEffect>();
+            var _effect = POPUP.Show<TouchEffect>();
             _effect.SetPositionByScreenPoint(screenPos);
         }
     }

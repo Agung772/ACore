@@ -40,17 +40,18 @@ namespace ACore
         private IEnumerator Initialize()
         {
             DontDestroyOnLoad(gameObject);
-            Game.Manager = this;
-            Game.Initialize();
+            SCENE.Initialize();
+            GAME.Manager = this;
+            GAME.Initialize();
             Debug.Log($"{nameof(ACore)}: Initialize");
-            yield return Game.InitializeCoroutine();
+            yield return GAME.InitializeCoroutine();
             Debug.Log($"{nameof(ACore)}: Initialize Coroutine");
             
             if (SceneManager.GetActiveScene().buildIndex == 0)
             {
                 var _scenePath = SceneUtility.GetScenePathByBuildIndex(1);
                 var _sceneName = Path.GetFileNameWithoutExtension(_scenePath);
-                Game.Get<SceneLoader>().LoadScene(_sceneName);
+                SCENE.LoadScene(_sceneName);
             }
         }
 
@@ -58,7 +59,7 @@ namespace ACore
         {
             if (pauseStatus)
             {
-                Storage.Save();
+                STORAGE.Save();
             }
         }
     }

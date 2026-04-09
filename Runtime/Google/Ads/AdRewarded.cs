@@ -25,7 +25,7 @@ namespace ACore.Google
         {
             var _request = new AdRequest();
 
-            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            var _setting = GAME.GetSO<ASettingData>().googlePlay;
             RewardedAd.Load(_setting.rewardedID, _request, (RewardedAd ad, LoadAdError error) =>
             {
                 if (error != null || ad == null)
@@ -59,12 +59,12 @@ namespace ACore.Google
                     }
                     else
                     {
-                        Popup.Show<LoadingScreenPopup>();
+                        POPUP.Show<LoadingScreenPopup>();
                         LeanTween.delayedCall(0.5f, () =>
                         {
                             if (_isRewarded) onComplete?.Invoke();
                             else onFailed?.Invoke();
-                            Popup.Remove<LoadingScreenPopup>();
+                            POPUP.Remove<LoadingScreenPopup>();
                         }).setIgnoreTimeScale(true);
                     }
                 };

@@ -6,7 +6,7 @@ namespace ACore
     {
         public void SetPositionByWorld(Vector3 position)
         {
-            var _canvas = Game.Manager.Canvas.GetComponent<Canvas>();
+            var _canvas = GAME.Manager.Canvas.GetComponent<Canvas>();
             var _cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
             var _screenPos = Camera.main.WorldToScreenPoint(position);
 
@@ -22,7 +22,7 @@ namespace ACore
 
         public void SetPositionByScreenPoint(Vector3 position)
         {
-            var _canvas = Game.Manager.Canvas.GetComponent<Canvas>();
+            var _canvas = GAME.Manager.Canvas.GetComponent<Canvas>();
             var _cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(

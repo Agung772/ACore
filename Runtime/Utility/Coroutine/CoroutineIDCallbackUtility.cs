@@ -15,7 +15,7 @@ namespace ACore
                 yield return CallBackCoroutine(key, id, startDelay, callBack, _handle);
             }
 
-            _handle = Game.Manager.StartCoroutine(Wrapper());
+            _handle = GAME.Manager.StartCoroutine(Wrapper());
             TryAddCoroutine(key, id, _handle);
         }
 

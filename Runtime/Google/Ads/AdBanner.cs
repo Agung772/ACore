@@ -13,15 +13,14 @@ namespace ACore.Google
 
         public override void Initialize()
         {
-            var _setting = Game.GetSO<ASettingData>().googlePlay;
+            var _setting = GAME.GetSO<ASettingData>().googlePlay;
             if (_setting.noBanner) return;
             
             Request(checkConnection: false);
-            Game.Manager.StartCoroutine(Refresh());
-
-            var _sceneLoader = Game.Get<SceneLoader>();
-            _sceneLoader.OnLoaded += Show;
-            _sceneLoader.OnUnloaded += Hide;
+            GAME.Manager.StartCoroutine(Refresh());
+            
+            SCENE.OnLoaded += Show;
+            SCENE.OnUnloaded += Hide;
         }
 
         public override bool CanShow()
@@ -62,7 +61,7 @@ namespace ACore.Google
             
             if (!checkConnection || await GameNetwork.IsInternetConnection())
             {
-                var _setting = Game.GetSO<ASettingData>().googlePlay;
+                var _setting = GAME.GetSO<ASettingData>().googlePlay;
                 data = new BannerView(_setting.bannerID, AdSize.Banner, AdPosition.Top);
                 data.OnBannerAdLoaded += BannerAdLoaded;
             

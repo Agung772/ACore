@@ -20,7 +20,7 @@ namespace ACore
         private AudioSource CreateSource(string name)
         {
             var _source = new GameObject(name).AddComponent<AudioSource>();
-            _source.transform.SetParent(Game.Manager.transform);
+            _source.transform.SetParent(GAME.Manager.transform);
             return _source;
         }
         

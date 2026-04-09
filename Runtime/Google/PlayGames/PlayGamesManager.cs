@@ -18,7 +18,7 @@ namespace ACore.Google
 
         public override void Initialize()
         {
-            if (!Game.GetSO<ASettingData>().isGooglePlay) return;
+            if (!GAME.GetSO<ASettingData>().isGooglePlay) return;
             
             PlayGamesPlatform.Activate();
             RequestPlayGames(() =>
@@ -47,7 +47,7 @@ namespace ACore.Google
                     if (countTryAgain < maxTryAgain)
                     {
                         countTryAgain++;
-                        Game.Manager.gameObject.LeanDelayedCall(1f, () =>
+                        GAME.Manager.gameObject.LeanDelayedCall(1f, () =>
                         {
                             RequestPlayGames(onComplete);
                         });

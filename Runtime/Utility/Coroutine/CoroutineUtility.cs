@@ -35,7 +35,7 @@ namespace ACore
                 RemoveCoroutine(key, _coroutineHandle);
             }
 
-            _coroutineHandle = Game.Manager.StartCoroutine(Wrapper());
+            _coroutineHandle = GAME.Manager.StartCoroutine(Wrapper());
             return _coroutineHandle;
         }
 
@@ -59,7 +59,7 @@ namespace ACore
 
         public static void StopCoroutine(this GameObject key)
         {
-            if (Game.Manager == null) return;
+            if (GAME.Manager == null) return;
 
             if (Coroutines.TryGetValue(key, out var _routines))
             {
@@ -67,7 +67,7 @@ namespace ACore
                 {
                     if (_routine != null)
                     {
-                        Game.Manager.StopCoroutine(_routine);
+                        GAME.Manager.StopCoroutine(_routine);
                     }
                 }
                 Coroutines.Remove(key);
@@ -84,7 +84,7 @@ namespace ACore
                     {
                         if (_coroutine != null)
                         {
-                            Game.Manager.StopCoroutine(_coroutine);
+                            GAME.Manager.StopCoroutine(_coroutine);
                         }
                     }
                 }

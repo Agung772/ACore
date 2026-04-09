@@ -14,7 +14,7 @@ namespace ACore.Google
 
         public override void Initialize()
         {
-            var _setting = Game.GetSO<ASettingData>();
+            var _setting = GAME.GetSO<ASettingData>();
             if (!_setting.isGooglePlay) return;
             
             var _googleSetting = _setting.googlePlay;
