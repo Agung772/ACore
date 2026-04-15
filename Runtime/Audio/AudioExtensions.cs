@@ -31,7 +31,11 @@ namespace ACore
             }
             
             _source.gameObject.LeanValue(value => _source.volume = value, _source.volume, 0, 0.5f)
-                .setOnComplete(() => onComplete?.Invoke());
+                .setOnComplete(() =>
+                {
+                    _source.clip = null;
+                    onComplete?.Invoke();
+                });
         }
         
         public static void PlayOneShot(this AudioClip clip)

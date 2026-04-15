@@ -26,7 +26,7 @@ namespace ACore
         
         public float BGMVolume
         {
-            get => PlayerPrefs.GetFloat("BGMVolume", 1);
+            get => PlayerPrefs.GetFloat("BGMVolume", 0.7f);
             set
             {
                 BGMSource.volume = value;
