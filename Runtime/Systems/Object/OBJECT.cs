@@ -100,7 +100,7 @@ namespace ACore
             }
             
             obj.onRemove?.Invoke();
-            Object.Destroy(obj);
+            Object.Destroy(obj.gameObject);
         }
         
         public static bool IsActive<T>() where T : ObjectBehaviour
