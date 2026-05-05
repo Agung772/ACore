@@ -85,7 +85,7 @@ namespace ACore
                 }
                 
                 _obj.onRemove?.Invoke();
-                Object.Destroy(_obj);
+                Object.Destroy(_obj.gameObject);
                 return true;
             }
             
