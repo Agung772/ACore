@@ -59,12 +59,12 @@ namespace ACore.Google
                     }
                     else
                     {
-                        POPUP.Show<LoadingScreenPopup>();
+                        OBJECT.Show<WaitingScreen>();
                         LeanTween.delayedCall(0.5f, () =>
                         {
                             if (_isRewarded) onComplete?.Invoke();
                             else onFailed?.Invoke();
-                            POPUP.Remove<LoadingScreenPopup>();
+                            OBJECT.Remove<WaitingScreen>();
                         }).setIgnoreTimeScale(true);
                     }
                 };

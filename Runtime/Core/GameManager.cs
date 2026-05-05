@@ -10,9 +10,6 @@ namespace ACore
     public class GameManager : MonoBehaviour
     {
         public event Action OnUpdate;
-        public RectTransform Canvas => canvas; [SerializeField] private RectTransform canvas;
-        public RectTransform FrontCanvas => frontCanvas; [SerializeField] private RectTransform frontCanvas;
-        public RectTransform CanvasPrefab => canvasPrefab; [SerializeField] private RectTransform canvasPrefab;
         
         #if UNITY_EDITOR
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]

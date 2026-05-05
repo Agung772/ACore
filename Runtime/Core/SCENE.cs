@@ -29,7 +29,7 @@ namespace ACore
 
         private static IEnumerator LoadSceneAsync(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
         {
-            POPUP.RemoveOnLoaded(removeAllPopup);
+            OBJECT.RemoveOnLoaded(removeAllPopup);
             var _async = SceneManager.LoadSceneAsync(sceneName);
 
             GAME.CurrentScene = sceneName;

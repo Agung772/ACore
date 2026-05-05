@@ -8,6 +8,5 @@ namespace ACore
         public virtual IEnumerator InitializeCoroutine() { yield break; }
         public virtual void Initialize() { }
         public virtual void PostInitialize() { }
-
     }
 }

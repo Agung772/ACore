@@ -28,7 +28,7 @@ namespace ACore
         
         private static void CreateGlobal()
         {
-            POPUP.Initialize();
+            OBJECT.Initialize();
             STORAGE.Initialize();
             
             globals = InstanceUtility.Create<GlobalBehaviour>();
