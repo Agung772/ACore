@@ -15,15 +15,19 @@ namespace ACore
         /// <summary>0.1 Second</summary>
         public static event Action OnUpdate100ms;
         private float timer100ms;
+        
         /// <summary>0.25 Second</summary>
         public static event Action OnUpdate250ms;
         private float timer250ms;
+        
         /// <summary>0.5 Second</summary>
         public static event Action OnUpdate500ms;
         private float timer500ms;
+        
         /// <summary>1 Second</summary>
         public static event Action OnUpdate1s;
         private float timer1s;
+        
         /// <summary>5 Seconds</summary>
         public static event Action OnUpdate5s;
         private float timer5s;
