@@ -18,12 +18,25 @@ namespace ACore
             particle.Stop();
         }
         
-        public static void Loop(this ParticleSystem particle, bool active, bool releaseParent = false)
+        public static void Loop(this ParticleSystem particle, bool active, bool withChildren = true)
         {
             if (!particle) return;
-            if (releaseParent) particle.transform.Release();
-            var _main = particle.main;
-            _main.loop = active;
+
+            if (withChildren)
+            {
+                var _particles = particle.GetComponentsInChildren<ParticleSystem>(true);
+
+                foreach (var _ps in _particles)
+                {
+                    var _main = _ps.main;
+                    _main.loop = active;
+                }
+            }
+            else
+            {
+                var _main = particle.main;
+                _main.loop = active;
+            }
         }
     }
 }
