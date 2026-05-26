@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using System;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -146,3 +148,5 @@ namespace ACore.Tool
         }
     }
 }
+
+#endif
