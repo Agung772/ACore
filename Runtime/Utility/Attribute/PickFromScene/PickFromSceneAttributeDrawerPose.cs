@@ -63,8 +63,15 @@ namespace ACore.Tool
 
             EditorGUI.BeginChangeCheck();
 
-            var _position = Handles.PositionHandle(_pose.position, _pose.rotation);
-            var _rotation = Handles.RotationHandle(_pose.rotation, _position);
+            var _position = Handles.PositionHandle(
+                _pose.position,
+                _pose.rotation
+            );
+
+            var _rotation = Handles.RotationHandle(
+                _pose.rotation,
+                _position
+            );
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -72,6 +79,7 @@ namespace ACore.Tool
                 _pose.rotation = _rotation;
 
                 ValueEntry.SmartValue = _pose;
+
                 current = _pose;
 
                 try
@@ -89,11 +97,27 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
-            CallNextDrawer(content);
+            var _pose = ValueEntry.SmartValue;
 
             GUILayout.BeginHorizontal();
 
-            GUILayout.Space(EditorGUI.indentLevel * 15f);
+            GUILayout.BeginVertical();
+
+            _pose.position = EditorGUILayout.Vector3Field(
+                "Position",
+                _pose.position
+            );
+
+            _pose.eulerAngles = EditorGUILayout.Vector3Field(
+                "Rotation",
+                _pose.eulerAngles
+            );
+
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(GUILayout.Width(24));
+
+            GUILayout.Space(2);
 
             if (SirenixEditorGUI.IconButton(EditorIcons.Flag, buttonStyle))
             {
@@ -102,10 +126,23 @@ namespace ACore.Tool
 
             if (SirenixEditorGUI.IconButton(EditorIcons.MagnifyingGlass, buttonStyle))
             {
-                SetFramePosition(ValueEntry.SmartValue.position);
+                SetFramePosition(_pose.position);
             }
 
+            GUILayout.EndVertical();
+
             GUILayout.EndHorizontal();
+
+            if (current.position != _pose.position || current.rotation != _pose.rotation)
+            {
+                ValueEntry.SmartValue = _pose;
+
+                current = _pose;
+
+                SceneView.RepaintAll();
+
+                ValueEntry.ApplyChanges();
+            }
         }
 
         private void DrawVisual(Pose pose)
@@ -113,6 +150,7 @@ namespace ACore.Tool
             var _size = HandleUtility.GetHandleSize(pose.position) * 0.8f;
 
             Handles.color = Color.green;
+
             Handles.ArrowHandleCap(
                 0,
                 pose.position,
@@ -121,10 +159,14 @@ namespace ACore.Tool
                 EventType.Repaint
             );
 
-            var _cam = SceneView.lastActiveSceneView.camera;
+            var _cam = SceneView.lastActiveSceneView?.camera;
+
             if (_cam == null) return;
 
-            var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(pose.position) * 0.2f;
+            var _offset =
+                -_cam.transform.up *
+                HandleUtility.GetHandleSize(pose.position) *
+                0.2f;
 
             Handles.Label(
                 pose.position + _offset,
@@ -153,10 +195,15 @@ namespace ACore.Tool
 
             if (string.IsNullOrEmpty(_condition)) return;
 
-            ifAttributeHelper = new IfAttributeHelper(Property, _condition, true);
+            ifAttributeHelper = new IfAttributeHelper(
+                Property,
+                _condition,
+                true
+            );
         }
 
-        private bool TryGetAttribute<T>(out T attribute) where T : Attribute
+        private bool TryGetAttribute<T>(out T attribute)
+            where T : Attribute
         {
             attribute = Property.Attributes.GetAttribute<T>();
             return attribute != null;
@@ -168,7 +215,9 @@ namespace ACore.Tool
 
             var _ifValue = ifAttributeHelper.GetValue(valueCondition);
 
-            return hideIfCondition ? !_ifValue : _ifValue;
+            return hideIfCondition
+                ? !_ifValue
+                : _ifValue;
         }
 
         private void SetPositionToCurrentSceneViewFrame()
@@ -177,8 +226,11 @@ namespace ACore.Tool
 
             var _pose = ValueEntry.SmartValue;
 
-            _pose.position = SceneView.lastActiveSceneView.camera.transform.position;
-            _pose.rotation = SceneView.lastActiveSceneView.camera.transform.rotation;
+            _pose.position =
+                SceneView.lastActiveSceneView.camera.transform.position;
+
+            _pose.rotation =
+                SceneView.lastActiveSceneView.camera.transform.rotation;
 
             ValueEntry.SmartValue = _pose;
 
