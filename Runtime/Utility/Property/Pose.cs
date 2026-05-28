@@ -6,7 +6,7 @@ namespace ACore
     [Serializable]
     public struct Pose
     {
-        [PickFromScene] public Vector3 position;
+        public Vector3 position;
         public Quaternion rotation;
 
         public Pose(Vector3 position, Quaternion rotation)
