@@ -4,17 +4,17 @@ namespace ACore
 {
     public static class ParticleExtensions
     {
-        public static void PlayAndRelease(this ParticleSystem particle)
+        public static void PlayAndRelease(this ParticleSystem particle, bool worldRotationStays = true)
         {
             if (!particle) return;
-            particle.transform.Release();
+            particle.transform.Release(worldRotationStays);
             particle.Play();
         }
         
-        public static void StopAndRelease(this ParticleSystem particle)
+        public static void StopAndRelease(this ParticleSystem particle, bool worldRotationStays = true)
         {
             if (!particle) return;
-            particle.transform.Release();
+            particle.transform.Release(worldRotationStays);
             particle.Stop();
         }
         

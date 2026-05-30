@@ -62,11 +62,15 @@ namespace ACore
             target.SetPositionAndRotation(pose.position, pose.rotation);
         }
         
-        public static void Release(this Transform transform)
+        public static void Release(this Transform transform, bool worldRotationStays = true)
         {
             var _localRot = transform.localRotation;
             transform.SetParent(null, true);
-            transform.rotation = _localRot;
+
+            if (!worldRotationStays)
+            {
+                transform.rotation = _localRot;
+            }
         }
     }
 }
