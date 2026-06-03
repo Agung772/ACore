@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace ACore
@@ -17,24 +16,27 @@ namespace ACore
 
         public static List<T> GetAllSO<T>() where T : ScriptableObjectAuto
         {
-            var _type = typeof(T);
+            CacheAllSO();
 
-            if (!Cache.TryGetValue(_type, out var _list))
+            if (!Cache.TryGetValue(typeof(T), out var _list))
             {
-                CacheAllSO();
-
-                if (!Cache.TryGetValue(_type, out _list))
-                {
-                    return new List<T>();
-                }
+                return new List<T>();
             }
 
-            return _list.Cast<T>().ToList();
+            var _result = new List<T>(_list.Count);
+
+            foreach (var _item in _list)
+            {
+                _result.Add((T)_item);
+            }
+
+            return _result;
         }
 
         private static void CacheAllSO()
         {
-            if (Cache.Count > 0) return;
+            if (Cache.Count > 0)
+                return;
 
             var _allSO = Resources.LoadAll<ScriptableObjectAuto>("");
 
@@ -42,14 +44,24 @@ namespace ACore
             {
                 var _type = _item.GetType();
 
-                if (!Cache.TryGetValue(_type, out var _list))
+                while (_type != null && typeof(ScriptableObjectAuto).IsAssignableFrom(_type))
                 {
-                    _list = new List<ScriptableObjectAuto>();
-                    Cache.Add(_type, _list);
-                }
+                    if (!Cache.TryGetValue(_type, out var _list))
+                    {
+                        _list = new List<ScriptableObjectAuto>();
+                        Cache.Add(_type, _list);
+                    }
 
-                _list.Add(_item);
+                    _list.Add(_item);
+
+                    _type = _type.BaseType;
+                }
             }
+        }
+
+        public static void ClearCache()
+        {
+            Cache.Clear();
         }
     }
 }
