@@ -92,6 +92,11 @@ namespace ACore
             return ScriptableObjectUtility.GetSO<T>();
         }
         
+        public static List<T> GetAllSO<T>() where T : ScriptableObjectAuto
+        {
+            return ScriptableObjectUtility.GetAllSO<T>();
+        }
+        
         public static void Quit()
         {
             Application.Quit();
