@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 namespace ACore
 {
-    public static class Network
+    public static class NETWORK
     {
         private const string TestURL = "https://www.google.com/generate_204";
         private const int TimeoutSeconds = 5;
