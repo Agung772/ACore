@@ -52,7 +52,8 @@ namespace ACore
         
         public virtual void Remove()
         {
-            OBJECT.Remove(this);
+            onRemove?.Invoke();
+            OBJECT.RemoveInternal(this);
         }
     }
 }

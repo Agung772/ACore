@@ -79,13 +79,7 @@ namespace ACore
         {
             if (TryGet<T>(out var _obj))
             {
-                if (!_obj.canMulti)
-                {
-                    Active.Remove(_obj.GetType()); 
-                }
-                
-                _obj.onRemove?.Invoke();
-                Object.Destroy(_obj.gameObject);
+                _obj.Remove();
                 return true;
             }
             
@@ -94,12 +88,16 @@ namespace ACore
         
         public static void Remove(ObjectBehaviour obj) 
         {
+            obj.Remove();
+        }
+        
+        internal static void RemoveInternal(ObjectBehaviour obj)
+        {
             if (!obj.canMulti)
             {
-                Active.Remove(obj.GetType()); 
+                Active.Remove(obj.GetType());
             }
-            
-            obj.onRemove?.Invoke();
+
             Object.Destroy(obj.gameObject);
         }
         
