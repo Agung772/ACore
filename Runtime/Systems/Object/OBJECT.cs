@@ -70,12 +70,12 @@ namespace ACore
             {
                 if (withGlobal || !_popup.isGlobal)
                 {
-                    Remove(_popup);
+                    _popup.Remove();
                 }
             }
         }
         
-        public static bool Remove<T>() where T : ObjectBehaviour 
+        public static bool Remove<T>() where T : ObjectBehaviour
         {
             if (TryGet<T>(out var _obj))
             {
