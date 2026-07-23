@@ -1,6 +1,7 @@
 #if GOOGLE_MOBILE
 
 using System;
+using System.Collections;
 using GoogleMobileAds.Api;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace ACore.Google
         {
             Request();
         }
-        
+
         public override bool CanShow()
         {
             return data != null && data.CanShowAd();
@@ -23,56 +24,65 @@ namespace ACore.Google
 
         private void Request()
         {
-            var _request = new AdRequest();
+            var request = new AdRequest();
 
-            var _setting = GAME.GetSO<ASettingData>().googlePlay;
-            RewardedAd.Load(_setting.rewardedID, _request, (RewardedAd ad, LoadAdError error) =>
+            var setting = GAME.GetSO<ASettingData>().googlePlay;
+            RewardedAd.Load(setting.rewardedID, request, (ad, error) =>
             {
                 if (error != null || ad == null)
                 {
                     Debug.LogError("RewardedAd failed to load");
                     return;
                 }
-                
+
                 data = ad;
                 data.OnAdFullScreenContentClosed += Request;
                 OnReady?.Invoke();
             });
         }
-        
+
         public void Show(Action onComplete, Action onFailed)
         {
-            if (CanShow())
-            {
-                var _isRewarded = false;
-
-                data.Show((Reward reward) =>
-                {
-                    _isRewarded = true;
-                });
-
-                data.OnAdFullScreenContentClosed += () =>
-                {
-                    if (_isRewarded)
-                    {
-                        onComplete?.Invoke();
-                    }
-                    else
-                    {
-                        OBJECT.Show<WaitingScreen>();
-                        LeanTween.delayedCall(0.5f, () =>
-                        {
-                            if (_isRewarded) onComplete?.Invoke();
-                            else onFailed?.Invoke();
-                            OBJECT.Remove<WaitingScreen>();
-                        }).setIgnoreTimeScale(true);
-                    }
-                };
-            }
-            else
+            if (!CanShow())
             {
                 onFailed?.Invoke();
                 Request();
+                return;
+            }
+
+            var isRewarded = false;
+
+            data.Show(reward =>
+            {
+                isRewarded = true;
+            });
+
+            data.OnAdFullScreenContentClosed += OnClosed;
+            return;
+
+            void OnClosed()
+            {
+                data.OnAdFullScreenContentClosed -= OnClosed;
+                GAME.Manager.StartCoroutine(WaitUntilReady());
+            }
+
+            IEnumerator WaitUntilReady()
+            {
+                OBJECT.Show<WaitingScreen>();
+
+                while (!Application.isFocused)
+                    yield return null;
+
+                yield return null;
+                yield return null;
+                yield return new WaitForEndOfFrame();
+
+                if (isRewarded)
+                    onComplete?.Invoke();
+                else
+                    onFailed?.Invoke();
+
+                OBJECT.Remove<WaitingScreen>();
             }
         }
     }
