@@ -6,6 +6,7 @@ namespace ACore
     {
         public virtual int Order { get; set; }
         public virtual IEnumerator InitializeCoroutine() { yield break; }
+        public virtual IEnumerator PostInitializeCoroutine() { yield break; }
         public virtual void Initialize() { }
         public virtual void PostInitialize() { }
     }

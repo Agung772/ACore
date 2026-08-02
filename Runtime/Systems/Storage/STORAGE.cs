@@ -16,6 +16,7 @@ namespace ACore
         private static readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
         private static Dictionary<Type, BaseStorage> storages = new();
         public static T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
+        public static string GetJSON => JsonConvert.SerializeObject(storages, jsonSettings);
 
         public static void Initialize()
         {

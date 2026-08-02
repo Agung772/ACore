@@ -3,7 +3,8 @@
     "rootNamespace": "ACore",
     "references": [
         "LeanTween",
-        "Google.Play.Games"
+        "Google.Play.Games",
+        "Project"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -24,7 +25,15 @@
         "GoogleMobileAds.Core.dll",
         "GoogleMobileAds.Ump.dll",
         "GoogleMobileAds.Ump.Unity.dll",
-        "GoogleMobileAds.Unity.dll"
+        "GoogleMobileAds.Unity.dll",
+        "Supabase.dll",
+        "Supabase.Core.dll",
+        "Supabase.Functions.dll",
+        "Supabase.Gotrue.dll",
+        "Supabase.Postgrest.dll",
+        "Supabase.Realtime.dll",
+        "Supabase.Storage.dll",
+        "Websocket.Client.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

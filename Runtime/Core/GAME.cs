@@ -24,6 +24,7 @@ namespace ACore
         public static IEnumerator InitializeCoroutine()
         {
             foreach (var _global in globals.Values) { yield return _global.InitializeCoroutine(); }
+            foreach (var _global in globals.Values) { yield return _global.PostInitializeCoroutine(); }
         }
         
         private static void CreateGlobal()
