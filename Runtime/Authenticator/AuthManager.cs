@@ -16,30 +16,43 @@ namespace ACore
 
         public override IEnumerator PostInitializeCoroutine()
         {
-#if UNITY_EDITOR
-            var _account = LoginEditorAccount();
-            yield return new WaitUntil(() => _account.IsCompleted);
-#endif
+            var _initialize = InitializeAuthentication();
 
-            yield return null;
+            yield return new WaitUntil(
+                () => _initialize.IsCompleted
+            );
+        }
+
+        private async Task InitializeAuthentication()
+        {
+            while (SupabaseManager.Client == null) await Task.Delay(100);
+
+            if (!await NETWORK.IsConnection())
+            {
+                Debug.LogError("Tidak ada koneksi internet.");
+                return;
+            }
+
+#if UNITY_EDITOR
+            await LoginEditorAccount();
+#else
+            await RestoreSession();
+#endif
         }
 
 #if UNITY_EDITOR
+
         private async Task<NetworkResult> LoginEditorAccount()
         {
             if (isAuthenticating)
-                return new NetworkResult("Already authenticating.");
+                return new NetworkResult(
+                    "Already authenticating."
+                );
 
             isAuthenticating = true;
 
             try
             {
-                while (SupabaseManager.Client == null)
-                    await Task.Delay(100);
-
-                if (!await NETWORK.IsConnection())
-                    return new NetworkResult("No Internet");
-
                 var _user =
                     SupabaseManager.Client.Auth.CurrentUser;
 
@@ -55,42 +68,62 @@ namespace ACore
                 }
 
                 if (_user == null)
-                    return new NetworkResult(
-                        "Login gagal. User null."
-                    );
-
-                var _playerResult =
-                    await GetPlayerData();
-
-                if (!_playerResult.IsSuccess)
                 {
-                    var _saveResult =
-                        await SavePlayerData(
-                            _user.Id,
-                            STORAGE.GetJSON
-                        );
-
-                    if (!_saveResult.IsSuccess)
-                        return _saveResult;
+                    return new NetworkResult(
+                        "Login Editor gagal. User null."
+                    );
                 }
 
-                return new NetworkResult();
+                return await InitializePlayerData(
+                    _user.Id
+                );
             }
             catch (Exception _e)
             {
                 HandleAuthException(_e);
-                return new NetworkResult(_e.Message);
+
+                return new NetworkResult(
+                    _e.Message
+                );
             }
             finally
             {
                 isAuthenticating = false;
             }
         }
+
 #endif
 
-        public async Task<NetworkResult> CreateAccount(
-            string email,
-            string password)
+        private async Task<NetworkResult> RestoreSession()
+        {
+            try
+            {
+                var _user =
+                    SupabaseManager.Client.Auth.CurrentUser;
+
+                if (_user == null)
+                {
+                    return new NetworkResult(
+                        "Session tidak ditemukan. Silakan login dengan Google."
+                    );
+                }
+
+                return await InitializePlayerData(
+                    _user.Id
+                );
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+        }
+
+        public async Task<NetworkResult> LoginGoogle(
+            string idToken)
         {
             if (SupabaseManager.Client == null)
             {
@@ -106,20 +139,29 @@ namespace ACore
                 );
             }
 
+            if (string.IsNullOrEmpty(idToken))
+            {
+                return new NetworkResult(
+                    "Google ID Token kosong."
+                );
+            }
+
+            if (isAuthenticating)
+            {
+                return new NetworkResult(
+                    "Already authenticating."
+                );
+            }
+
+            isAuthenticating = true;
+
             try
             {
-                var _session =
-                    await SupabaseManager.Client.Auth.SignUp(
-                        email,
-                        password
+                await SupabaseManager.Client.Auth
+                    .SignInWithIdToken(
+                        Supabase.Gotrue.Constants.Provider.Google,
+                        idToken
                     );
-
-                if (_session == null)
-                {
-                    return new NetworkResult(
-                        "SignUp berhasil tetapi session null. Kemungkinan Email Confirmation aktif."
-                    );
-                }
 
                 var _user =
                     SupabaseManager.Client.Auth.CurrentUser;
@@ -127,24 +169,13 @@ namespace ACore
                 if (_user == null)
                 {
                     return new NetworkResult(
-                        "Account dibuat tetapi User null."
+                        "Google login berhasil tetapi User null."
                     );
                 }
 
-                var _saveResult =
-                    await SavePlayerData(
-                        _user.Id,
-                        STORAGE.GetJSON
-                    );
-
-                if (!_saveResult.IsSuccess)
-                {
-                    return new NetworkResult(
-                        _saveResult.Error
-                    );
-                }
-
-                return new NetworkResult();
+                return await InitializePlayerData(
+                    _user.Id
+                );
             }
             catch (Exception _e)
             {
@@ -154,6 +185,33 @@ namespace ACore
                     _e.Message
                 );
             }
+            finally
+            {
+                isAuthenticating = false;
+            }
+        }
+
+        private async Task<NetworkResult> InitializePlayerData(
+            string userId)
+        {
+            var _playerResult =
+                await GetPlayerData();
+
+            if (_playerResult.IsSuccess)
+                return new NetworkResult();
+
+            if (_playerResult.Error !=
+                "PlayerData tidak ditemukan.")
+            {
+                return new NetworkResult(
+                    _playerResult.Error
+                );
+            }
+
+            return await SavePlayerData(
+                userId,
+                STORAGE.GetJSON
+            );
         }
 
         public async Task<NetworkResult<PlayerData>> GetPlayerData()
@@ -210,42 +268,8 @@ namespace ACore
             }
         }
 
-        private async Task<NetworkResult> SavePlayerData(
-            string userId,
+        public async Task<NetworkResult> SavePlayerData(
             string gameData)
-        {
-            if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult(
-                    "Supabase Client belum siap."
-                );
-            }
-
-            try
-            {
-                var _playerData = new PlayerData
-                {
-                    Id = userId,
-                    GameData = gameData
-                };
-
-                await SupabaseManager.Client
-                    .From<PlayerData>()
-                    .Upsert(_playerData);
-
-                return new NetworkResult();
-            }
-            catch (Exception _e)
-            {
-                return new NetworkResult(
-                    _e.Message
-                );
-            }
-        }
-
-        public async Task<NetworkResult> Login(
-            string email,
-            string password)
         {
             if (SupabaseManager.Client == null)
             {
@@ -263,37 +287,49 @@ namespace ACore
 
             try
             {
-                await SupabaseManager.Client.Auth.SignIn(
-                    email,
-                    password
-                );
-
                 var _user =
                     SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
                 {
                     return new NetworkResult(
-                        "Login gagal. User null."
+                        "User belum login."
                     );
                 }
 
-                var _playerResult =
-                    await GetPlayerData();
+                return await SavePlayerData(
+                    _user.Id,
+                    gameData
+                );
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+        }
 
-                if (!_playerResult.IsSuccess)
+        private async Task<NetworkResult> SavePlayerData(
+            string userId,
+            string gameData)
+        {
+            try
+            {
+                var _playerData = new PlayerData
                 {
-                    return new NetworkResult(
-                        _playerResult.Error
-                    );
-                }
+                    Id = userId,
+                    GameData = gameData
+                };
+
+                await SupabaseManager.Client
+                    .From<PlayerData>()
+                    .Upsert(_playerData);
 
                 return new NetworkResult();
             }
             catch (Exception _e)
             {
-                HandleAuthException(_e);
-
                 return new NetworkResult(
                     _e.Message
                 );
@@ -334,7 +370,8 @@ namespace ACore
         {
             string _message = _e.Message;
 
-            if (_message.Contains("over_email_send_rate_limit"))
+            if (_message.Contains(
+                "over_email_send_rate_limit"))
             {
                 Debug.LogError(
                     "Supabase Email Rate Limit terkena."
@@ -343,7 +380,8 @@ namespace ACore
                 return;
             }
 
-            if (_message.Contains("Invalid API key"))
+            if (_message.Contains(
+                "Invalid API key"))
             {
                 Debug.LogError(
                     "Supabase API Key tidak valid."
@@ -352,19 +390,11 @@ namespace ACore
                 return;
             }
 
-            if (_message.Contains("email_address_invalid"))
+            if (_message.Contains(
+                "invalid_credentials"))
             {
                 Debug.LogError(
-                    "Format email ditolak oleh Supabase."
-                );
-
-                return;
-            }
-
-            if (_message.Contains("invalid_credentials"))
-            {
-                Debug.LogError(
-                    "Email atau password salah."
+                    "Login Editor gagal. Email atau password salah."
                 );
 
                 return;
