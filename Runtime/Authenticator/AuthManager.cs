@@ -9,7 +9,6 @@ namespace ACore
 {
     public class AuthManager : GlobalBehaviour
     {
-        [Header("Editor Account")]
         private string editorEmail = "test@gmail.com";
         private string editorPassword = "test123";
 
@@ -20,13 +19,12 @@ namespace ACore
 #if UNITY_EDITOR
             var _account = LoginEditorAccount();
             yield return new WaitUntil(() => _account.IsCompleted);
-            
-            var _currentUser = SupabaseManager.Client.Auth.CurrentUser;
-            
-            SavePlayerData(_currentUser.Id, STORAGE.GetJSON);
 #endif
+
+            yield return null;
         }
 
+#if UNITY_EDITOR
         private async Task<NetworkResult> LoginEditorAccount()
         {
             if (isAuthenticating)
@@ -40,76 +38,109 @@ namespace ACore
                     await Task.Delay(100);
 
                 if (!await NETWORK.IsConnection())
-                {
-                    Debug.LogError("Tidak ada koneksi internet.");
                     return new NetworkResult("No Internet");
-                }
 
-                Debug.Log("Supabase Client siap.");
-
-                var _currentUser =
+                var _user =
                     SupabaseManager.Client.Auth.CurrentUser;
 
-                if (_currentUser != null)
+                if (_user == null)
                 {
-                    Debug.Log(
-                        $"Session ditemukan: {_currentUser.Id}"
+                    await SupabaseManager.Client.Auth.SignIn(
+                        editorEmail,
+                        editorPassword
                     );
 
+                    _user =
+                        SupabaseManager.Client.Auth.CurrentUser;
+                }
+
+                if (_user == null)
+                    return new NetworkResult(
+                        "Login gagal. User null."
+                    );
+
+                var _playerResult =
+                    await GetPlayerData();
+
+                if (!_playerResult.IsSuccess)
+                {
                     var _saveResult =
-                        await SavePlayerData(_currentUser.Id);
+                        await SavePlayerData(
+                            _user.Id,
+                            STORAGE.GetJSON
+                        );
 
                     if (!_saveResult.IsSuccess)
-                    {
-                        Debug.LogError(
-                            $"Gagal menyimpan PlayerData: {_saveResult.Error}"
-                        );
-
-                        return new NetworkResult(
-                            _saveResult.Error
-                        );
-                    }
-
-                    return new NetworkResult();
+                        return _saveResult;
                 }
 
-                Debug.Log(
-                    $"Login Editor Account: {editorEmail}"
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
+            }
+            finally
+            {
+                isAuthenticating = false;
+            }
+        }
+#endif
+
+        public async Task<NetworkResult> CreateAccount(
+            string email,
+            string password)
+        {
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult(
+                    "Supabase Client belum siap."
                 );
+            }
 
-                await SupabaseManager.Client.Auth.SignIn(
-                    editorEmail,
-                    editorPassword
+            if (!await NETWORK.IsConnection())
+            {
+                return new NetworkResult(
+                    "No Internet"
                 );
+            }
 
-                _currentUser =
-                    SupabaseManager.Client.Auth.CurrentUser;
-
-                if (_currentUser == null)
-                {
-                    const string error =
-                        "Login berhasil tetapi CurrentUser null.";
-
-                    Debug.LogError(error);
-
-                    return new NetworkResult(error);
-                }
-
-                Debug.Log(
-                    $"Login berhasil: {_currentUser.Id}"
-                );
-
-                var _result =
-                    await SavePlayerData(_currentUser.Id);
-
-                if (!_result.IsSuccess)
-                {
-                    Debug.LogError(
-                        $"Gagal menyimpan PlayerData: {_result.Error}"
+            try
+            {
+                var _session =
+                    await SupabaseManager.Client.Auth.SignUp(
+                        email,
+                        password
                     );
 
+                if (_session == null)
+                {
                     return new NetworkResult(
-                        _result.Error
+                        "SignUp berhasil tetapi session null. Kemungkinan Email Confirmation aktif."
+                    );
+                }
+
+                var _user =
+                    SupabaseManager.Client.Auth.CurrentUser;
+
+                if (_user == null)
+                {
+                    return new NetworkResult(
+                        "Account dibuat tetapi User null."
+                    );
+                }
+
+                var _saveResult =
+                    await SavePlayerData(
+                        _user.Id,
+                        STORAGE.GetJSON
+                    );
+
+                if (!_saveResult.IsSuccess)
+                {
+                    return new NetworkResult(
+                        _saveResult.Error
                     );
                 }
 
@@ -119,17 +150,157 @@ namespace ACore
             {
                 HandleAuthException(_e);
 
-                return new NetworkResult(_e.Message);
-            }
-            finally
-            {
-                isAuthenticating = false;
+                return new NetworkResult(
+                    _e.Message
+                );
             }
         }
 
-        public async Task<NetworkResult<bool>> CreateAccount(
+        public async Task<NetworkResult<PlayerData>> GetPlayerData()
+        {
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult<PlayerData>(
+                    "Supabase Client belum siap."
+                );
+            }
+
+            if (!await NETWORK.IsConnection())
+            {
+                return new NetworkResult<PlayerData>(
+                    "No Internet"
+                );
+            }
+
+            try
+            {
+                var _user =
+                    SupabaseManager.Client.Auth.CurrentUser;
+
+                if (_user == null)
+                {
+                    return new NetworkResult<PlayerData>(
+                        "User belum login."
+                    );
+                }
+
+                var _response =
+                    await SupabaseManager.Client
+                        .From<PlayerData>()
+                        .Where(x => x.Id == _user.Id)
+                        .Get();
+
+                if (_response.Models == null ||
+                    _response.Models.Count == 0)
+                {
+                    return new NetworkResult<PlayerData>(
+                        "PlayerData tidak ditemukan."
+                    );
+                }
+
+                return new NetworkResult<PlayerData>(
+                    _response.Models[0]
+                );
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult<PlayerData>(
+                    _e.Message
+                );
+            }
+        }
+
+        private async Task<NetworkResult> SavePlayerData(
+            string userId,
+            string gameData)
+        {
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult(
+                    "Supabase Client belum siap."
+                );
+            }
+
+            try
+            {
+                var _playerData = new PlayerData
+                {
+                    Id = userId,
+                    GameData = gameData
+                };
+
+                await SupabaseManager.Client
+                    .From<PlayerData>()
+                    .Upsert(_playerData);
+
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+        }
+
+        public async Task<NetworkResult> Login(
             string email,
             string password)
+        {
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult(
+                    "Supabase Client belum siap."
+                );
+            }
+
+            if (!await NETWORK.IsConnection())
+            {
+                return new NetworkResult(
+                    "No Internet"
+                );
+            }
+
+            try
+            {
+                await SupabaseManager.Client.Auth.SignIn(
+                    email,
+                    password
+                );
+
+                var _user =
+                    SupabaseManager.Client.Auth.CurrentUser;
+
+                if (_user == null)
+                {
+                    return new NetworkResult(
+                        "Login gagal. User null."
+                    );
+                }
+
+                var _playerResult =
+                    await GetPlayerData();
+
+                if (!_playerResult.IsSuccess)
+                {
+                    return new NetworkResult(
+                        _playerResult.Error
+                    );
+                }
+
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+        }
+
+        public async Task<NetworkResult<bool>> Logout()
         {
             if (SupabaseManager.Client == null)
             {
@@ -147,102 +318,26 @@ namespace ACore
 
             try
             {
-                Debug.Log(
-                    $"Membuat akun: {email}"
-                );
-
-                var _session =
-                    await SupabaseManager.Client.Auth.SignUp(
-                        email,
-                        password
-                    );
-
-                if (_session == null)
-                {
-                    return new NetworkResult<bool>(
-                        "SignUp berhasil tetapi session null. Kemungkinan Email Confirmation aktif."
-                    );
-                }
-
-                var _user =
-                    SupabaseManager.Client.Auth.CurrentUser;
-
-                if (_user == null)
-                {
-                    return new NetworkResult<bool>(
-                        "Account dibuat tetapi User null."
-                    );
-                }
-
-                Debug.Log(
-                    $"Account berhasil dibuat: {_user.Id}"
-                );
-
-                var _saveResult =
-                    await SavePlayerData(_user.Id);
-
-                if (!_saveResult.IsSuccess)
-                {
-                    return new NetworkResult<bool>(
-                        _saveResult.Error
-                    );
-                }
+                await SupabaseManager.Client.Auth.SignOut();
 
                 return new NetworkResult<bool>(true);
             }
             catch (Exception _e)
             {
-                HandleAuthException(_e);
-
                 return new NetworkResult<bool>(
                     _e.Message
                 );
             }
         }
 
-        private async Task<NetworkResult> SavePlayerData(
-            string userId, string gameData = "")
+        private void HandleAuthException(Exception _e)
         {
-            if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult<bool>(
-                    "Supabase Client belum siap."
-                );
-            }
-
-            try
-            {
-                PlayerData _playerData = new PlayerData
-                {
-                    Id = userId,
-                    GameData = gameData
-                };
-
-                await SupabaseManager.Client
-                    .From<PlayerData>()
-                    .Upsert(_playerData);
-
-                Debug.Log("PlayerData berhasil disimpan.");
-                Debug.Log($"User ID : {userId}");
-
-                return new NetworkResult();
-            }
-            catch (Exception _e)
-            {
-                return new NetworkResult(
-                    _e.Message
-                );
-            }
-        }
-
-        private void HandleAuthException(Exception e)
-        {
-            string _message = e.Message;
+            string _message = _e.Message;
 
             if (_message.Contains("over_email_send_rate_limit"))
             {
                 Debug.LogError(
-                    "Supabase Email Rate Limit terkena. Tunggu sampai rate limit reset."
+                    "Supabase Email Rate Limit terkena."
                 );
 
                 return;
@@ -278,103 +373,6 @@ namespace ACore
             Debug.LogError(
                 $"Supabase Auth Error:\n{_message}"
             );
-        }
-
-        public async Task<NetworkResult<bool>> Login(
-            string email,
-            string password)
-        {
-            if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult<bool>(
-                    "Supabase Client belum siap."
-                );
-            }
-
-            if (!await NETWORK.IsConnection())
-            {
-                return new NetworkResult<bool>(
-                    "No Internet"
-                );
-            }
-
-            try
-            {
-                await SupabaseManager.Client.Auth.SignIn(
-                    email,
-                    password
-                );
-
-                var _user =
-                    SupabaseManager.Client.Auth.CurrentUser;
-
-                if (_user == null)
-                {
-                    return new NetworkResult<bool>(
-                        "Login gagal. User null."
-                    );
-                }
-
-                Debug.Log(
-                    $"Login berhasil: {_user.Id}"
-                );
-
-                var _saveResult =
-                    await SavePlayerData(_user.Id);
-
-                if (!_saveResult.IsSuccess)
-                {
-                    return new NetworkResult<bool>(
-                        _saveResult.Error
-                    );
-                }
-
-                return new NetworkResult<bool>(true);
-            }
-            catch (Exception _e)
-            {
-                HandleAuthException(_e);
-
-                return new NetworkResult<bool>(
-                    _e.Message
-                );
-            }
-        }
-
-        public async Task<NetworkResult<bool>> Logout()
-        {
-            if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult<bool>(
-                    "Supabase Client belum siap."
-                );
-            }
-
-            if (!await NETWORK.IsConnection())
-            {
-                return new NetworkResult<bool>(
-                    "No Internet"
-                );
-            }
-
-            try
-            {
-                await SupabaseManager.Client.Auth.SignOut();
-
-                Debug.Log("Logout berhasil.");
-
-                return new NetworkResult<bool>(true);
-            }
-            catch (Exception _e)
-            {
-                Debug.LogError(
-                    $"Logout gagal:\n{_e.Message}"
-                );
-
-                return new NetworkResult<bool>(
-                    _e.Message
-                );
-            }
         }
     }
 }
