@@ -59,7 +59,7 @@ namespace ACore.Google
                 data.Destroy();
             }
             
-            if (!checkConnection || await NETWORK.IsConnection())
+            if (!checkConnection || await Network.IsConnection())
             {
                 var _setting = GAME.GetSO<ASettingData>().googlePlay;
                 data = new BannerView(_setting.bannerID, AdSize.Banner, AdPosition.Top);

@@ -14,20 +14,16 @@ namespace ACore
 
         private bool isAuthenticating;
 
-        public override IEnumerator PostInitializeCoroutine()
+        public override async Task PostInitializeAsync()
         {
-            var _initialize = InitializeAuthentication();
-
-            yield return new WaitUntil(
-                () => _initialize.IsCompleted
-            );
+            await InitializeAuthentication().WithTimeout(5);
         }
 
         private async Task InitializeAuthentication()
         {
             while (SupabaseManager.Client == null) await Task.Delay(100);
 
-            if (!await NETWORK.IsConnection())
+            if (!await Network.IsConnection())
             {
                 Debug.LogError("Tidak ada koneksi internet.");
                 return;
@@ -132,7 +128,7 @@ namespace ACore
                 );
             }
 
-            if (!await NETWORK.IsConnection())
+            if (!await Network.IsConnection())
             {
                 return new NetworkResult(
                     "No Internet"
@@ -223,7 +219,7 @@ namespace ACore
                 );
             }
 
-            if (!await NETWORK.IsConnection())
+            if (!await Network.IsConnection())
             {
                 return new NetworkResult<PlayerData>(
                     "No Internet"
@@ -278,7 +274,7 @@ namespace ACore
                 );
             }
 
-            if (!await NETWORK.IsConnection())
+            if (!await Network.IsConnection())
             {
                 return new NetworkResult(
                     "No Internet"
@@ -345,7 +341,7 @@ namespace ACore
                 );
             }
 
-            if (!await NETWORK.IsConnection())
+            if (!await Network.IsConnection())
             {
                 return new NetworkResult<bool>(
                     "No Internet"

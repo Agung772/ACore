@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,61 +6,57 @@ using UnityEngine.Networking;
 
 namespace ACore
 {
-    public static class NETWORK
+    public static class Network
     {
         private const string TestURL = "https://www.google.com/generate_204";
-        private const int TimeoutSeconds = 5;
-        private const float SlowThresholdSeconds = 3f;
-
+        private const string TimeURL = "https://google.com";
+        
         public static async Task<bool> IsConnection()
         {
             if (Application.internetReachability == NetworkReachability.NotReachable)
                 return false;
-            
-            using var _request = UnityWebRequest.Get(TestURL);
 
-            _request.timeout = TimeoutSeconds;
+            try
+            {
+                using var _request = UnityWebRequest.Get(TestURL);
 
-            var _stopwatch = Stopwatch.StartNew();
-            var _operation = _request.SendWebRequest();
+                var _operation = _request.SendWebRequest();
 
-            while (!_operation.isDone)
-                await Task.Yield();
+                await _operation.WithTimeout(5);
 
-            _stopwatch.Stop();
-
-            if (_request.result != UnityWebRequest.Result.Success)
+                return _request.result == UnityWebRequest.Result.Success;
+            }
+            catch
+            {
                 return false;
-
-            var _duration = (float)_stopwatch.Elapsed.TotalSeconds;
-            return _duration <= SlowThresholdSeconds;
+            }
         }
-        
+
+
         public static async Task<NetworkResult<DateTime>> GetTime()
         {
             try
             {
-                using var _request = UnityWebRequest.Head("https://google.com");
-
-                _request.timeout = TimeoutSeconds;
+                using var _request = UnityWebRequest.Head(TimeURL);
 
                 var _operation = _request.SendWebRequest();
 
-                while (!_operation.isDone)
-                {
-                    await Task.Yield();
-                }
+                await _operation.WithTimeout(5);
 
                 if (_request.result != UnityWebRequest.Result.Success)
                 {
-                    return new NetworkResult<DateTime>(_request.error);
+                    return new NetworkResult<DateTime>(
+                        _request.error
+                    );
                 }
-
+                
                 var _date = _request.GetResponseHeader("Date");
 
                 if (string.IsNullOrEmpty(_date))
                 {
-                    return new NetworkResult<DateTime>("Date header not found.");
+                    return new NetworkResult<DateTime>(
+                        "Date header not found."
+                    );
                 }
 
                 return new NetworkResult<DateTime>(
@@ -75,7 +70,9 @@ namespace ACore
             }
             catch (Exception _exception)
             {
-                return new NetworkResult<DateTime>(_exception.Message);
+                return new NetworkResult<DateTime>(
+                    _exception.Message
+                );
             }
         }
     }

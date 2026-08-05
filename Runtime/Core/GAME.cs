@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -25,6 +26,12 @@ namespace ACore
         {
             foreach (var _global in globals.Values) { yield return _global.InitializeCoroutine(); }
             foreach (var _global in globals.Values) { yield return _global.PostInitializeCoroutine(); }
+        }
+        
+        public static async Task InitializeAsync()
+        {
+            foreach (var _global in globals.Values) { await _global.InitializeAsync(); }
+            foreach (var _global in globals.Values) { await _global.PostInitializeAsync(); }
         }
         
         private static void CreateGlobal()
