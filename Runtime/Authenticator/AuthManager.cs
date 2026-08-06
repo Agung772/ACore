@@ -17,13 +17,14 @@ namespace ACore
         public override async Task PostInitializeAsync()
         {
             await InitializeAuthentication().WithTimeout(5);
+            await SavePlayerData(STORAGE.GetJSON);
         }
 
         private async Task InitializeAuthentication()
         {
             while (SupabaseManager.Client == null) await Task.Delay(100);
 
-            if (!await Network.IsConnection())
+            if (!await NETWORK.IsConnection())
             {
                 Debug.LogError("Tidak ada koneksi internet.");
                 return;
@@ -118,8 +119,7 @@ namespace ACore
             }
         }
 
-        public async Task<NetworkResult> LoginGoogle(
-            string idToken)
+        public async Task<NetworkResult> LoginGoogle(string idToken)
         {
             if (SupabaseManager.Client == null)
             {
@@ -128,7 +128,7 @@ namespace ACore
                 );
             }
 
-            if (!await Network.IsConnection())
+            if (!await NETWORK.IsConnection())
             {
                 return new NetworkResult(
                     "No Internet"
@@ -219,7 +219,7 @@ namespace ACore
                 );
             }
 
-            if (!await Network.IsConnection())
+            if (!await NETWORK.IsConnection())
             {
                 return new NetworkResult<PlayerData>(
                     "No Internet"
@@ -264,8 +264,7 @@ namespace ACore
             }
         }
 
-        public async Task<NetworkResult> SavePlayerData(
-            string gameData)
+        public async Task<NetworkResult> SavePlayerData(string gameData)
         {
             if (SupabaseManager.Client == null)
             {
@@ -274,7 +273,7 @@ namespace ACore
                 );
             }
 
-            if (!await Network.IsConnection())
+            if (!await NETWORK.IsConnection())
             {
                 return new NetworkResult(
                     "No Internet"
@@ -306,9 +305,7 @@ namespace ACore
             }
         }
 
-        private async Task<NetworkResult> SavePlayerData(
-            string userId,
-            string gameData)
+        private async Task<NetworkResult> SavePlayerData(string userId, string gameData)
         {
             try
             {
@@ -341,7 +338,7 @@ namespace ACore
                 );
             }
 
-            if (!await Network.IsConnection())
+            if (!await NETWORK.IsConnection())
             {
                 return new NetworkResult<bool>(
                     "No Internet"
