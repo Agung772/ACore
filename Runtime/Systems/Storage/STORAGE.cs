@@ -16,7 +16,7 @@ namespace ACore
         private static readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
         private static Dictionary<Type, BaseStorage> storages = new();
         public static T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
-        public static string GetJSON => JsonConvert.SerializeObject(storages, jsonSettings);
+
 
         public static void Initialize()
         {
@@ -33,9 +33,14 @@ namespace ACore
                 _storage.OnCreate();
             }
         }
-        private static void Load()
+
+        public static string JSON
         {
-            if (File.Exists(PathFile))
+            get
+            {
+                return JsonConvert.SerializeObject(storages, jsonSettings);
+            }
+            set
             {
                 try
                 {
@@ -76,6 +81,16 @@ namespace ACore
                     }
                 }
             }
+        }
+        
+        private static void Load()
+        {
+            if (File.Exists(PathFile))
+            {
+                var _json = File.ReadAllBytes(PathFile);
+                var _decrypt = Encryption.Decrypt(_json);
+                JSON = _decrypt;
+            }
             else
             {
                 Debug.LogWarning("Storage data not found");
@@ -96,15 +111,15 @@ namespace ACore
             {
                 storages[_key].OnSave();
             }
-            
-            var _json = JsonConvert.SerializeObject(storages, jsonSettings);
+
+            var _json = JSON;
             var _encrypt = Encryption.Encrypt(_json);
             File.WriteAllBytes(PathFile, _encrypt);
 
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             var _pathEditorSave = Path.Combine(Application.persistentDataPath, PathFile.Replace(".", "Editor."));
             File.WriteAllText(_pathEditorSave, _json);
-            #endif
+#endif
 
             Debug.Log($"Save Storage Data \n" +
                       $"Path : {PathFile}");

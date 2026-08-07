@@ -17,7 +17,7 @@ namespace ACore
         public override async Task PostInitializeAsync()
         {
             await InitializeAuthentication().WithTimeout(5);
-            await SavePlayerData(STORAGE.GetJSON);
+            await SavePlayerData(STORAGE.JSON);
         }
 
         private async Task InitializeAuthentication()
@@ -206,7 +206,7 @@ namespace ACore
 
             return await SavePlayerData(
                 userId,
-                STORAGE.GetJSON
+                STORAGE.JSON
             );
         }
 
@@ -318,6 +318,8 @@ namespace ACore
                 await SupabaseManager.Client
                     .From<PlayerData>()
                     .Upsert(_playerData);
+                
+                Debug.Log("Successfully saved the game data to server.");
 
                 return new NetworkResult();
             }
