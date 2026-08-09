@@ -7,7 +7,7 @@ using Supabase.Postgrest.Models;
 namespace ACore
 {
     [Table("players")]
-    public class PlayerData : BaseModel
+    public class GameDatabase : BaseModel
     {
         [PrimaryKey("id")]
         public string Id { get; set; }

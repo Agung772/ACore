@@ -1,28 +1,39 @@
 #if SUPABASE
 
 using System;
-using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
+
+#if !UNITY_EDITOR
+using GooglePlayGames;
+using GooglePlayGames.BasicApi;
+#endif
 
 namespace ACore
 {
     public class AuthManager : GlobalBehaviour
     {
+#if UNITY_EDITOR
+
         private string editorEmail = "test@gmail.com";
         private string editorPassword = "test123";
+
+#endif
 
         private bool isAuthenticating;
 
         public override async Task PostInitializeAsync()
         {
-            await InitializeAuthentication().WithTimeout(5);
-            await SavePlayerData(STORAGE.JSON);
+            await Setup().WithTimeout(5);
+
+            if (SupabaseManager.Client?.Auth?.CurrentUser != null)
+                await SavePlayerData(STORAGE.JSON);
         }
 
-        private async Task InitializeAuthentication()
+        private async Task Setup()
         {
-            while (SupabaseManager.Client == null) await Task.Delay(100);
+            while (SupabaseManager.Client == null)
+                await Task.Delay(100);
 
             if (!await NETWORK.IsConnection())
             {
@@ -31,10 +42,49 @@ namespace ACore
             }
 
 #if UNITY_EDITOR
+
             await LoginEditorAccount();
+
 #else
-            await RestoreSession();
+
+            var _restoreResult = await RestoreSession();
+
+            if (_restoreResult.IsSuccess)
+            {
+                Debug.Log("Supabase session berhasil di-restore.");
+                return;
+            }
+
+            Debug.Log(
+                "Supabase session tidak ditemukan. " +
+                "Mencoba Google Play Games Silent Sign-In."
+            );
+
+            var _silentResult = await SilentSignIn();
+
+            if (_silentResult.IsSuccess)
+            {
+                Debug.Log(
+                    "Google Play Games Silent Sign-In berhasil."
+                );
+
+                return;
+            }
+
+            Debug.Log(
+                "Google Play Games Silent Sign-In gagal."
+            );
+
+            Debug.Log(
+                "User perlu Interactive Sign-In."
+            );
+
 #endif
+        }
+
+        private void ReplaceData()
+        {
+            
         }
 
 #if UNITY_EDITOR
@@ -101,9 +151,13 @@ namespace ACore
                 if (_user == null)
                 {
                     return new NetworkResult(
-                        "Session tidak ditemukan. Silakan login dengan Google."
+                        "Session tidak ditemukan."
                     );
                 }
+
+                Debug.Log(
+                    $"Supabase session ditemukan: {_user.Id}"
+                );
 
                 return await InitializePlayerData(
                     _user.Id
@@ -119,7 +173,272 @@ namespace ACore
             }
         }
 
-        public async Task<NetworkResult> LoginGoogle(string idToken)
+#if !UNITY_EDITOR
+
+        public async Task<NetworkResult> SilentSignIn()
+        {
+            if (isAuthenticating)
+            {
+                return new NetworkResult("Already authenticating.");
+            }
+
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult("Supabase Client belum siap.");
+            }
+
+            if (!await NETWORK.IsConnection())
+            {
+                return new NetworkResult("No Internet");
+            }
+
+            isAuthenticating = true;
+
+            try
+            {
+                Debug.Log(
+                    "Google Play Games Silent Sign-In..."
+                );
+
+                var _result = 
+                    await AuthenticatePlayGames();
+
+                if (!_result.IsSuccess)
+                    return _result;
+
+                string _playerId =
+                    GetPlayGamesPlayerId();
+
+                if (string.IsNullOrEmpty(_playerId))
+                {
+                    return new NetworkResult(
+                        "Google Play Games berhasil login " +
+                        "tetapi Player ID kosong."
+                    );
+                }
+
+                Debug.Log(
+                    $"Google Play Games Player ID: {_playerId}"
+                );
+
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogWarning(
+                    $"Google Play Games Silent Sign-In gagal: {_e.Message}"
+                );
+
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+            finally
+            {
+                isAuthenticating = false;
+            }
+        }
+
+#endif
+
+#if !UNITY_EDITOR
+
+        public async Task<NetworkResult> InteractiveSignIn()
+        {
+            if (isAuthenticating)
+            {
+                return new NetworkResult(
+                    "Already authenticating."
+                );
+            }
+
+            if (SupabaseManager.Client == null)
+            {
+                return new NetworkResult(
+                    "Supabase Client belum siap."
+                );
+            }
+
+            if (!await NETWORK.IsConnection())
+            {
+                return new NetworkResult(
+                    "No Internet"
+                );
+            }
+
+            isAuthenticating = true;
+
+            try
+            {
+                Debug.Log(
+                    "Memulai Google Play Games Interactive Sign-In..."
+                );
+
+                var _result =
+                    await InteractivePlayGames();
+
+                if (!_result.IsSuccess)
+                    return _result;
+
+                string _playerId =
+                    GetPlayGamesPlayerId();
+
+                if (string.IsNullOrEmpty(_playerId))
+                {
+                    return new NetworkResult(
+                        "Google Play Games berhasil login " +
+                        "tetapi Player ID kosong."
+                    );
+                }
+
+                Debug.Log(
+                    $"Google Play Games Player ID: {_playerId}"
+                );
+
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError(
+                    $"Google Play Games Interactive Sign-In gagal: {_e.Message}"
+                );
+
+                return new NetworkResult(
+                    _e.Message
+                );
+            }
+            finally
+            {
+                isAuthenticating = false;
+            }
+        }
+
+#endif
+
+#if !UNITY_EDITOR
+
+        private Task<NetworkResult> AuthenticatePlayGames()
+        {
+            var _task =
+                new TaskCompletionSource<NetworkResult>();
+
+            try
+            {
+                PlayGamesPlatform.Instance.Authenticate(
+                    _status =>
+                    {
+                        if (_status == SignInStatus.Success)
+                        {
+                            _task.SetResult(
+                                new NetworkResult()
+                            );
+
+                            return;
+                        }
+
+                        _task.SetResult(
+                            new NetworkResult(
+                                $"PGS Silent Sign-In gagal: {_status}"
+                            )
+                        );
+                    }
+                );
+            }
+            catch (Exception _e)
+            {
+                _task.SetResult(
+                    new NetworkResult(
+                        _e.Message
+                    )
+                );
+            }
+
+            return _task.Task;
+        }
+
+#endif
+
+#if !UNITY_EDITOR
+
+        private Task<NetworkResult> InteractivePlayGames()
+        {
+            var _task =
+                new TaskCompletionSource<NetworkResult>();
+
+            try
+            {
+                PlayGamesPlatform.Instance.ManuallyAuthenticate(
+                    _status =>
+                    {
+                        if (_status == SignInStatus.Success)
+                        {
+                            _task.SetResult(
+                                new NetworkResult()
+                            );
+
+                            return;
+                        }
+
+                        _task.SetResult(
+                            new NetworkResult(
+                                $"PGS Interactive Sign-In gagal: {_status}"
+                            )
+                        );
+                    }
+                );
+            }
+            catch (Exception _e)
+            {
+                _task.SetResult(
+                    new NetworkResult(
+                        _e.Message
+                    )
+                );
+            }
+
+            return _task.Task;
+        }
+
+#endif
+
+#if !UNITY_EDITOR
+
+        private string GetPlayGamesPlayerId()
+        {
+            try
+            {
+                return PlayGamesPlatform.Instance.GetUserId();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError(
+                    $"Gagal mengambil Player ID: {_e.Message}"
+                );
+
+                return null;
+            }
+        }
+
+        public string GetPlayGamesPlayerName()
+        {
+            try
+            {
+                return PlayGamesPlatform.Instance.GetUserDisplayName();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError(
+                    $"Gagal mengambil Player Name: {_e.Message}"
+                );
+
+                return null;
+            }
+        }
+
+#endif
+
+        public async Task<NetworkResult> LoginGoogle(
+            string idToken)
         {
             if (SupabaseManager.Client == null)
             {
@@ -153,6 +472,21 @@ namespace ACore
 
             try
             {
+                return await LoginGoogleInternal(
+                    idToken
+                );
+            }
+            finally
+            {
+                isAuthenticating = false;
+            }
+        }
+
+        private async Task<NetworkResult> LoginGoogleInternal(
+            string idToken)
+        {
+            try
+            {
                 await SupabaseManager.Client.Auth
                     .SignInWithIdToken(
                         Supabase.Gotrue.Constants.Provider.Google,
@@ -169,6 +503,10 @@ namespace ACore
                     );
                 }
 
+                Debug.Log(
+                    $"Supabase Google Login berhasil: {_user.Id}"
+                );
+
                 return await InitializePlayerData(
                     _user.Id
                 );
@@ -180,10 +518,6 @@ namespace ACore
                 return new NetworkResult(
                     _e.Message
                 );
-            }
-            finally
-            {
-                isAuthenticating = false;
             }
         }
 
@@ -210,18 +544,19 @@ namespace ACore
             );
         }
 
-        public async Task<NetworkResult<PlayerData>> GetPlayerData()
+        public async Task<NetworkResult<GameDatabase>>
+            GetPlayerData()
         {
             if (SupabaseManager.Client == null)
             {
-                return new NetworkResult<PlayerData>(
+                return new NetworkResult<GameDatabase>(
                     "Supabase Client belum siap."
                 );
             }
 
             if (!await NETWORK.IsConnection())
             {
-                return new NetworkResult<PlayerData>(
+                return new NetworkResult<GameDatabase>(
                     "No Internet"
                 );
             }
@@ -233,38 +568,39 @@ namespace ACore
 
                 if (_user == null)
                 {
-                    return new NetworkResult<PlayerData>(
+                    return new NetworkResult<GameDatabase>(
                         "User belum login."
                     );
                 }
 
                 var _response =
                     await SupabaseManager.Client
-                        .From<PlayerData>()
+                        .From<GameDatabase>()
                         .Where(x => x.Id == _user.Id)
                         .Get();
 
                 if (_response.Models == null ||
                     _response.Models.Count == 0)
                 {
-                    return new NetworkResult<PlayerData>(
+                    return new NetworkResult<GameDatabase>(
                         "PlayerData tidak ditemukan."
                     );
                 }
 
-                return new NetworkResult<PlayerData>(
+                return new NetworkResult<GameDatabase>(
                     _response.Models[0]
                 );
             }
             catch (Exception _e)
             {
-                return new NetworkResult<PlayerData>(
+                return new NetworkResult<GameDatabase>(
                     _e.Message
                 );
             }
         }
 
-        public async Task<NetworkResult> SavePlayerData(string gameData)
+        public async Task<NetworkResult> SavePlayerData(
+            string gameData)
         {
             if (SupabaseManager.Client == null)
             {
@@ -305,21 +641,25 @@ namespace ACore
             }
         }
 
-        private async Task<NetworkResult> SavePlayerData(string userId, string gameData)
+        private async Task<NetworkResult> SavePlayerData(
+            string userId,
+            string gameData)
         {
             try
             {
-                var _playerData = new PlayerData
+                var _playerData = new GameDatabase
                 {
                     Id = userId,
                     GameData = gameData
                 };
 
                 await SupabaseManager.Client
-                    .From<PlayerData>()
+                    .From<GameDatabase>()
                     .Upsert(_playerData);
-                
-                Debug.Log("Successfully saved the game data to server.");
+
+                Debug.Log(
+                    "Successfully saved the game data to server."
+                );
 
                 return new NetworkResult();
             }
@@ -351,7 +691,9 @@ namespace ACore
             {
                 await SupabaseManager.Client.Auth.SignOut();
 
-                return new NetworkResult<bool>(true);
+                return new NetworkResult<bool>(
+                    true
+                );
             }
             catch (Exception _e)
             {
@@ -361,7 +703,8 @@ namespace ACore
             }
         }
 
-        private void HandleAuthException(Exception _e)
+        private void HandleAuthException(
+            Exception _e)
         {
             string _message = _e.Message;
 
@@ -389,7 +732,8 @@ namespace ACore
                 "invalid_credentials"))
             {
                 Debug.LogError(
-                    "Login Editor gagal. Email atau password salah."
+                    "Login Editor gagal. " +
+                    "Email atau password salah."
                 );
 
                 return;

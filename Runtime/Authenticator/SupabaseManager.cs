@@ -41,10 +41,10 @@ namespace ACore
                 Debug.Log("Supabase Ready");
                 return new NetworkResult();
             }
-            catch (Exception e)
+            catch (Exception _e)
             {
                 Client = null;
-                return new NetworkResult($"Supabase Setup Error: {e}");
+                return new NetworkResult($"Supabase Setup Error: {_e}");
             }
         }
 
@@ -59,29 +59,29 @@ namespace ACore
 
             try
             {
-                var user = Client.Auth.CurrentUser;
+                var _user = Client.Auth.CurrentUser;
 
-                if (user == null)
+                if (_user == null)
                 {
                     Debug.LogError("User belum login.");
                     return;
                 }
 
-                var playerData = new PlayerData
+                var _playerData = new GameDatabase
                 {
-                    Id = user.Id,
+                    Id = _user.Id,
                     GameData = gameData
                 };
 
                 await Client
-                    .From<PlayerData>()
-                    .Upsert(playerData);
+                    .From<GameDatabase>()
+                    .Upsert(_playerData);
 
                 Debug.Log("PlayerData berhasil dikirim ke Supabase.");
             }
-            catch (Exception e)
+            catch (Exception _e)
             {
-                Debug.LogError($"Gagal mengirim PlayerData: {e}");
+                Debug.LogError($"Gagal mengirim PlayerData: {_e}");
             }
         }
 
@@ -102,10 +102,10 @@ namespace ACore
                         .ToUniversalTime()
                 );
             }
-            catch (Exception e)
+            catch (Exception _e)
             {
                 return new NetworkResult<DateTime>(
-                    $"Supabase Get Time Error: {e}"
+                    $"Supabase Get Time Error: {_e}"
                 );
             }
         }

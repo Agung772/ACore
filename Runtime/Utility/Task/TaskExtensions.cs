@@ -25,7 +25,6 @@ namespace ACore
             return await task;
         }
 
-
         public static async Task WithTimeout(this Task task, float timeoutSeconds)
         {
             var _timeoutTask = Task.Delay(
