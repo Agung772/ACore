@@ -13,5 +13,9 @@ namespace ACore
         [TabGroup("Google Play")] public bool isGooglePlay;
         [TabGroup("Google Play"), ShowIf(nameof(isGooglePlay)), HideLabel] 
         public GooglePlaySetting googlePlay;
+        
+        [TabGroup("Supabase")] public bool isSupabase;
+        [TabGroup("Supabase"), ShowIf(nameof(isSupabase)), HideLabel] 
+        public SupabaseSetting supabase;
     }
 }

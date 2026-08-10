@@ -7,8 +7,10 @@ namespace ACore
     {
         private const string FILE_NAME = "Save.txt";
         private static string PathFile => Path.Combine(Application.persistentDataPath, FILE_NAME);
-        private static GameStorages storages = new();
-        public static T Get<T>() where T : BaseStorage, new() => storages.Get<T>();
+        private static GameData data = new();
+        public static T Get<T>() where T : BaseStorage, new() => data.Get<T>();
+        public static string GetJSON() => data.GetJSON();
+        public static void SetJSON(string json) => data.SetJSON(json);
         
         public static void Initialize()
         {
@@ -19,7 +21,7 @@ namespace ACore
 
         private static void Create()
         {
-            storages.Initialize();
+            data.Initialize();
         }
         
         private static void Load()
@@ -28,20 +30,20 @@ namespace ACore
             {
                 var _json = File.ReadAllBytes(PathFile);
                 var _decrypt = Encryption.Decrypt(_json);
-                storages.SetJSON(_decrypt);
+                data.SetJSON(_decrypt);
             }
             else
             {
                 Debug.LogWarning("Storage data not found");
-                storages.New();
+                data.New();
             }
         }
 
         public static void Save()
         {
-            if (storages == null) return;
+            if (data == null) return;
 
-            var _json = storages.GetJSON();
+            var _json = data.GetJSON();
             var _encrypt = Encryption.Encrypt(_json);
             File.WriteAllBytes(PathFile, _encrypt);
 
@@ -56,15 +58,15 @@ namespace ACore
 
         public static void TryReplace(string json)
         {
-            var _newStorages = new GameStorages(json);
+            var _newStorages = new GameData(json);
             TryReplace(_newStorages);
         }
         
-        public static void TryReplace(GameStorages newStorages)
+        public static void TryReplace(GameData newData)
         {
-            if (newStorages.Get<MetaStorage>().lastSave > storages.Get<MetaStorage>().lastSave)
+            if (newData.Get<MetaStorage>().lastSave > data.Get<MetaStorage>().lastSave)
             {
-                storages = newStorages;
+                data = newData;
             }
         }
     }

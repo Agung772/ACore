@@ -12,13 +12,7 @@ namespace ACore
     {
         public static Client Client { get; private set; }
 
-        private const string Url = "https://uqmurtxybeatlfgkbuuc.supabase.co";
-        private const string AnonKey = "sb_publishable_XZdKyPz5_vNPded-qId-uA_icHWMDJj";
-
-        public override async Task InitializeAsync()
-        {
-            await Setup().WithTimeout(5);
-        }
+        public override async Task InitializeAsync() => await Setup().WithTimeout(5);
 
         private async Task<NetworkResult> Setup()
         {
@@ -26,9 +20,11 @@ namespace ACore
             {
                 Debug.Log("Supabase Setup...");
 
+                var _setting = GAME.GetSO<ASettingData>().supabase;
+
                 Client = new Client(
-                    Url,
-                    AnonKey,
+                    _setting.url,
+                    _setting.key,
                     new SupabaseOptions
                     {
                         AutoRefreshToken = true,
@@ -37,8 +33,11 @@ namespace ACore
                 );
 
                 Debug.Log("Supabase Client Created");
+
                 await Client.InitializeAsync();
+
                 Debug.Log("Supabase Ready");
+
                 return new NetworkResult();
             }
             catch (Exception _e)
@@ -48,24 +47,51 @@ namespace ACore
             }
         }
 
-
-        public async void SendPlayerData(string username, string gameData)
+        public static async Task<NetworkResult<GameDatabase>> GetPlayerData()
         {
             if (Client == null)
-            {
-                Debug.LogError("Supabase Client belum siap.");
-                return;
-            }
+                return new NetworkResult<GameDatabase>("Supabase Client belum siap.");
+
+            if (!await NETWORK.IsConnection())
+                return new NetworkResult<GameDatabase>("No Internet");
 
             try
             {
                 var _user = Client.Auth.CurrentUser;
 
                 if (_user == null)
-                {
-                    Debug.LogError("User belum login.");
-                    return;
-                }
+                    return new NetworkResult<GameDatabase>("User belum login.");
+
+                var _response = await Client
+                    .From<GameDatabase>()
+                    .Where(x => x.Id == _user.Id)
+                    .Get();
+
+                if (_response.Models == null || _response.Models.Count == 0)
+                    return new NetworkResult<GameDatabase>("PlayerData tidak ditemukan.");
+
+                return new NetworkResult<GameDatabase>(_response.Models[0]);
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult<GameDatabase>(_e.Message);
+            }
+        }
+
+        public static async Task<NetworkResult> SavePlayerData(string gameData)
+        {
+            if (Client == null)
+                return new NetworkResult("Supabase Client belum siap.");
+
+            if (!await NETWORK.IsConnection())
+                return new NetworkResult("No Internet");
+
+            try
+            {
+                var _user = Client.Auth.CurrentUser;
+
+                if (_user == null)
+                    return new NetworkResult("User belum login.");
 
                 var _playerData = new GameDatabase
                 {
@@ -77,17 +103,24 @@ namespace ACore
                     .From<GameDatabase>()
                     .Upsert(_playerData);
 
-                Debug.Log("PlayerData berhasil dikirim ke Supabase.");
+                Debug.Log("Successfully saved the game data to server.");
+
+                return new NetworkResult();
             }
             catch (Exception _e)
             {
-                Debug.LogError($"Gagal mengirim PlayerData: {_e}");
+                return new NetworkResult(_e.Message);
             }
         }
 
-
-        public async Task<NetworkResult<DateTime>> GetTime()
+        public static async Task<NetworkResult<DateTime>> GetTime()
         {
+            if (Client == null)
+                return new NetworkResult<DateTime>("Supabase Client belum siap.");
+
+            if (!await NETWORK.IsConnection())
+                return new NetworkResult<DateTime>("No Internet");
+
             try
             {
                 var _response = await Client
@@ -98,8 +131,7 @@ namespace ACore
                     .WithTimeout(5f);
 
                 return new NetworkResult<DateTime>(
-                    DateTime.Parse(_response.Content)
-                        .ToUniversalTime()
+                    DateTime.Parse(_response.Content).ToUniversalTime()
                 );
             }
             catch (Exception _e)

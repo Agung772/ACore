@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Plastic.Newtonsoft.Json;
-using Unity.Plastic.Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace ACore
 {
-    public class GameStorages : MonoBehaviour
+    public class GameData : MonoBehaviour
     {
         private Dictionary<Type, BaseStorage> storages = new();
         public T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
         private readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
-        public GameStorages() { }
-        public GameStorages(string json) { SetJSON(json); }
+        public GameData() { }
+        public GameData(string json) { SetJSON(json); }
         
         public void Initialize()
         {
