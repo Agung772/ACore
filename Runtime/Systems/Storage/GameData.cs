@@ -7,23 +7,14 @@ using UnityEngine;
 
 namespace ACore
 {
-    public class GameData : MonoBehaviour
+    public class GameData
     {
         private Dictionary<Type, BaseStorage> storages = new();
         public T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
         private readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
-        public GameData() { }
+        
         public GameData(string json) { SetJSON(json); }
         
-        public void Initialize()
-        {
-            storages = InstanceUtility.Create<BaseStorage>();
-            foreach (var _storage in storages.Values)
-            {
-                _storage.OnCreate();
-            }
-        }
-
         public string GetJSON()
         {
             return JsonConvert.SerializeObject(storages, jsonSettings);
@@ -33,6 +24,12 @@ namespace ACore
         {
             try
             {
+                storages = InstanceUtility.Create<BaseStorage>();
+                foreach (var _storage in storages.Values)
+                {
+                    _storage.OnCreate();
+                }
+                
                 var _raw = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json, jsonSettings);
                 var _serializer = JsonSerializer.Create(jsonSettings);
 
@@ -74,6 +71,14 @@ namespace ACore
             {
                 _storage.OnDefault();
                 _storage.OnLoad();
+            }
+        }
+        
+        public void Save()
+        {
+            foreach (var _storage in storages.Values)
+            {
+                _storage.OnSave();
             }
         }
     }
