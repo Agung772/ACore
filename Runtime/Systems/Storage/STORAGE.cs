@@ -48,6 +48,8 @@ namespace ACore
             File.WriteAllText(_pathEditorSave, _json);
 #endif
 
+            SupabaseManager.SavePlayerData();
+
             Debug.Log($"Save Storage Data \n" +
                       $"Path : {PathFile}");
         }

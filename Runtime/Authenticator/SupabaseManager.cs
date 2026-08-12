@@ -78,8 +78,15 @@ namespace ACore
             }
         }
 
+        public static async Task<NetworkResult> SavePlayerData()
+        {
+            return await SavePlayerData(STORAGE.GetJSON());
+        }
+        
         public static async Task<NetworkResult> SavePlayerData(string gameData)
         {
+            Debug.Log("Start Saving Game Data to server");
+            
             if (Client == null)
                 return new NetworkResult("Supabase Client belum siap.");
 
@@ -109,6 +116,7 @@ namespace ACore
             }
             catch (Exception _e)
             {
+                Debug.Log($"Failed to save the game data to server. {_e}");
                 return new NetworkResult(_e.Message);
             }
         }
