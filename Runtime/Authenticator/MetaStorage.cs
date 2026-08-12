@@ -33,6 +33,12 @@ namespace ACore
         // Gameplay
         public double totalPlayTime;
 
+        public override void OnDefault()
+        {
+            base.OnDefault();
+            createdAt = DateTime.UtcNow;
+        }
+
         public override void OnLoad()
         {
             base.OnLoad();

@@ -7,7 +7,7 @@ namespace ACore
     {
         private const string FILE_NAME = "Save.txt";
         private static string PathFile => Path.Combine(Application.persistentDataPath, FILE_NAME);
-        private static GameData data;
+        private static GameData data = new();
         public static T Get<T>() where T : BaseStorage, new() => data.Get<T>();
         public static string GetJSON() => data.GetJSON();
         public static void SetJSON(string json) => data.SetJSON(json);
@@ -24,7 +24,7 @@ namespace ACore
             {
                 var _json = File.ReadAllBytes(PathFile);
                 var _decrypt = Encryption.Decrypt(_json);
-                data = new GameData(_decrypt);
+                data.SetJSON(_decrypt);
             }
             else
             {
@@ -54,7 +54,8 @@ namespace ACore
 
         public static bool TryReplace(string json)
         {
-            var _newStorages = new GameData(json);
+            var _newStorages = new GameData();
+            _newStorages.SetJSON(json);
             return TryReplace(_newStorages);
         }
         
@@ -63,6 +64,7 @@ namespace ACore
             if (newData.Get<MetaStorage>().lastSave > data.Get<MetaStorage>().lastSave)
             {
                 data = newData;
+                Debug.Log("Successfully try replaced GameData from server");
                 return true;
             }
 
@@ -71,12 +73,8 @@ namespace ACore
 
         public static void Replace(string json)
         {
-            var _newStorages = new GameData(json);
-            Replace(_newStorages);
-        }
-        public static void Replace(GameData newData)
-        {
-            data = newData;
+            data.SetJSON(json);
+            Debug.Log("Successfully replaced GameData from server");
         }
     }
 }

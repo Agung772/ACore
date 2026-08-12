@@ -12,8 +12,15 @@ namespace ACore
         private Dictionary<Type, BaseStorage> storages = new();
         public T Get<T>() where T : BaseStorage, new() => storages[typeof(T)] as T;
         private readonly JsonSerializerSettings jsonSettings = new() { TypeNameHandling = TypeNameHandling.Auto };
-        
-        public GameData(string json) { SetJSON(json); }
+
+        public GameData()
+        {
+            storages = InstanceUtility.Create<BaseStorage>();
+            foreach (var _storage in storages.Values)
+            {
+                _storage.OnCreate();
+            }
+        }
         
         public string GetJSON()
         {
@@ -24,12 +31,6 @@ namespace ACore
         {
             try
             {
-                storages = InstanceUtility.Create<BaseStorage>();
-                foreach (var _storage in storages.Values)
-                {
-                    _storage.OnCreate();
-                }
-                
                 var _raw = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(json, jsonSettings);
                 var _serializer = JsonSerializer.Create(jsonSettings);
 

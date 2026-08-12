@@ -4,7 +4,7 @@
     "references": [
         "LeanTween",
         "Google.Play.Games",
-        "Project"
+        "Google"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

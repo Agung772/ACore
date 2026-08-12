@@ -3,6 +3,7 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using Google;
 
 namespace ACore
 {
@@ -15,8 +16,7 @@ namespace ACore
 
         private bool isAuthenticating;
 
-        public override async Task PostInitializeAsync() =>
-            await Setup().WithTimeout(5);
+        public override async Task PostInitializeAsync() => await Setup().WithTimeout(5);
 
         private async Task Setup()
         {
@@ -25,10 +25,7 @@ namespace ACore
 
             if (!await NETWORK.IsConnection())
             {
-                Debug.LogError(
-                    "Tidak ada koneksi internet."
-                );
-
+                Debug.LogError("Tidak ada koneksi internet.");
                 return;
             }
 
@@ -37,11 +34,7 @@ namespace ACore
             var _result = await LoginEditorAccount();
 
             if (!_result.IsSuccess)
-            {
-                Debug.LogError(
-                    $"Editor Auth gagal: {_result.Error}"
-                );
-            }
+                Debug.LogError($"Editor Auth gagal: {_result.Error}");
 
 #else
 
@@ -49,16 +42,21 @@ namespace ACore
 
             if (_result.IsSuccess)
             {
-                Debug.Log(
-                    "Supabase session berhasil di-restore."
-                );
-
+                Debug.Log("Supabase session berhasil di-restore.");
                 return;
             }
 
-            Debug.Log(
-                $"Supabase session tidak ditemukan: {_result.Error}"
-            );
+            Debug.Log($"Supabase session tidak ditemukan: {_result.Error}");
+
+            _result = await LoginGoogle();
+
+            if (!_result.IsSuccess)
+            {
+                Debug.LogError($"Google Auth gagal: {_result.Error}");
+                return;
+            }
+
+            Debug.Log("Google Auth berhasil.");
 
 #endif
         }
@@ -69,23 +67,14 @@ namespace ACore
 
             if (_playerResult.IsSuccess)
             {
-                STORAGE.TryReplace(
-                    _playerResult.Value.GameData
-                );
-
+                STORAGE.TryReplace(_playerResult.Value.GameData);
                 return new NetworkResult();
             }
 
             if (_playerResult.Error != "PlayerData tidak ditemukan.")
-            {
-                return new NetworkResult(
-                    _playerResult.Error
-                );
-            }
+                return new NetworkResult(_playerResult.Error);
 
-            return await SupabaseManager.SavePlayerData(
-                STORAGE.GetJSON()
-            );
+            return await SupabaseManager.SavePlayerData(STORAGE.GetJSON());
         }
 
 #if UNITY_EDITOR
@@ -93,11 +82,7 @@ namespace ACore
         private async Task<NetworkResult> LoginEditorAccount()
         {
             if (isAuthenticating)
-            {
-                return new NetworkResult(
-                    "Already authenticating."
-                );
-            }
+                return new NetworkResult("Already authenticating.");
 
             isAuthenticating = true;
 
@@ -107,36 +92,21 @@ namespace ACore
 
                 if (_user == null)
                 {
-                    await SupabaseManager.Client.Auth.SignIn(
-                        editorEmail,
-                        editorPassword
-                    );
-
+                    await SupabaseManager.Client.Auth.SignIn(editorEmail, editorPassword);
                     _user = SupabaseManager.Client.Auth.CurrentUser;
                 }
 
                 if (_user == null)
-                {
-                    return new NetworkResult(
-                        "Login Editor gagal. User null."
-                    );
-                }
+                    return new NetworkResult("Login Editor gagal. User null.");
 
-                Debug.Log(
-                    $"Supabase Editor Login berhasil: {_user.Id}"
-                );
+                Debug.Log($"Supabase Editor Login berhasil: {_user.Id}");
 
                 return await InitializePlayerData();
             }
             catch (Exception _e)
             {
-                HandleAuthException(
-                    _e
-                );
-
-                return new NetworkResult(
-                    _e.Message
-                );
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
             }
             finally
             {
@@ -153,69 +123,58 @@ namespace ACore
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
-                {
-                    return new NetworkResult(
-                        "Session tidak ditemukan."
-                    );
-                }
+                    return new NetworkResult("Session tidak ditemukan.");
 
-                Debug.Log(
-                    $"Supabase session ditemukan: {_user.Id}"
-                );
+                Debug.Log($"Supabase session ditemukan: {_user.Id}");
 
                 return await InitializePlayerData();
             }
             catch (Exception _e)
             {
-                HandleAuthException(
-                    _e
-                );
-
-                return new NetworkResult(
-                    _e.Message
-                );
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
             }
         }
 
-        public async Task<NetworkResult> LoginGoogle(
-            string idToken
-        )
+        public async Task<NetworkResult> LoginGoogle()
         {
             if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult(
-                    "Supabase Client belum siap."
-                );
-            }
+                return new NetworkResult("Supabase Client belum siap.");
 
             if (!await NETWORK.IsConnection())
-            {
-                return new NetworkResult(
-                    "No Internet"
-                );
-            }
-
-            if (string.IsNullOrEmpty(idToken))
-            {
-                return new NetworkResult(
-                    "Google ID Token kosong."
-                );
-            }
+                return new NetworkResult("No Internet");
 
             if (isAuthenticating)
-            {
-                return new NetworkResult(
-                    "Already authenticating."
-                );
-            }
+                return new NetworkResult("Already authenticating.");
 
             isAuthenticating = true;
 
             try
             {
-                return await LoginGoogleInternal(
-                    idToken
-                );
+                GoogleSignIn.Configuration = new GoogleSignInConfiguration
+                {
+                    WebClientId = GAME.GetSO<ASettingData>().supabase.clintID,
+                    RequestIdToken = true,
+                    RequestEmail = true
+                };
+
+                var _googleUser = await GoogleSignIn.DefaultInstance.SignIn();
+
+                if (_googleUser == null)
+                    return new NetworkResult("Google User null.");
+
+                if (string.IsNullOrEmpty(_googleUser.IdToken))
+                    return new NetworkResult("Google ID Token kosong.");
+
+                Debug.Log($"Google Login berhasil: {_googleUser.Email}");
+                Debug.Log($"Google ID Token: {_googleUser.IdToken}");
+
+                return await LoginGoogleInternal(_googleUser.IdToken);
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
             }
             finally
             {
@@ -223,118 +182,70 @@ namespace ACore
             }
         }
 
-        private async Task<NetworkResult> LoginGoogleInternal(
-            string idToken
-        )
+        private async Task<NetworkResult> LoginGoogleInternal(string idToken)
         {
             try
             {
-                await SupabaseManager.Client.Auth.SignInWithIdToken(
-                    Supabase.Gotrue.Constants.Provider.Google,
-                    idToken
-                );
+                await SupabaseManager.Client.Auth.SignInWithIdToken(Supabase.Gotrue.Constants.Provider.Google, idToken);
 
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
-                {
-                    return new NetworkResult(
-                        "Google login berhasil tetapi User null."
-                    );
-                }
+                    return new NetworkResult("Google login berhasil tetapi User null.");
 
-                Debug.Log(
-                    $"Supabase Google Login berhasil: {_user.Id}"
-                );
+                Debug.Log($"Supabase Google Login berhasil: {_user.Id}");
 
                 return await InitializePlayerData();
             }
             catch (Exception _e)
             {
-                HandleAuthException(
-                    _e
-                );
-
-                return new NetworkResult(
-                    _e.Message
-                );
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
             }
         }
 
         public async Task<NetworkResult<bool>> Logout()
         {
             if (SupabaseManager.Client == null)
-            {
-                return new NetworkResult<bool>(
-                    "Supabase Client belum siap."
-                );
-            }
+                return new NetworkResult<bool>("Supabase Client belum siap.");
 
             if (!await NETWORK.IsConnection())
-            {
-                return new NetworkResult<bool>(
-                    "No Internet"
-                );
-            }
+                return new NetworkResult<bool>("No Internet");
 
             try
             {
                 await SupabaseManager.Client.Auth.SignOut();
-
-                return new NetworkResult<bool>(
-                    true
-                );
+                return new NetworkResult<bool>(true);
             }
             catch (Exception _e)
             {
-                return new NetworkResult<bool>(
-                    _e.Message
-                );
+                return new NetworkResult<bool>(_e.Message);
             }
         }
 
-        private void HandleAuthException(
-            Exception _e
-        )
+        private void HandleAuthException(Exception _e)
         {
             string _message = _e.Message;
 
-            if (_message.Contains(
-                "over_email_send_rate_limit"
-            ))
+            if (_message.Contains("over_email_send_rate_limit"))
             {
-                Debug.LogError(
-                    "Supabase Email Rate Limit terkena."
-                );
-
+                Debug.LogError("Supabase Email Rate Limit terkena.");
                 return;
             }
 
-            if (_message.Contains(
-                "Invalid API key"
-            ))
+            if (_message.Contains("Invalid API key"))
             {
-                Debug.LogError(
-                    "Supabase API Key tidak valid."
-                );
-
+                Debug.LogError("Supabase API Key tidak valid.");
                 return;
             }
 
-            if (_message.Contains(
-                "invalid_credentials"
-            ))
+            if (_message.Contains("invalid_credentials"))
             {
-                Debug.LogError(
-                    "Login Editor gagal. Email atau password salah."
-                );
-
+                Debug.LogError("Login Editor gagal. Email atau password salah.");
                 return;
             }
 
-            Debug.LogError(
-                $"Supabase Auth Error:\n{_message}"
-            );
+            Debug.LogError($"Supabase Auth Error:\n{_message}");
         }
     }
 }
