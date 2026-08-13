@@ -18,7 +18,7 @@ namespace ACore
         {
             try
             {
-                Debug.Log("Supabase Setup...");
+                Debug.Log("[Supabase] Initializing...");
 
                 var _setting = GAME.GetSO<ASettingData>().supabase;
 
@@ -32,35 +32,47 @@ namespace ACore
                     }
                 );
 
-                Debug.Log("Supabase Client Created");
+                Debug.Log("[Supabase] Client created.");
 
                 await Client.InitializeAsync();
 
-                Debug.Log("Supabase Ready");
+                Debug.Log("[Supabase] Initialization completed.");
 
                 return new NetworkResult();
             }
             catch (Exception _e)
             {
                 Client = null;
-                return new NetworkResult($"Supabase Setup Error: {_e}");
+                Debug.LogError($"[Supabase] Initialization failed: {_e}");
+                return new NetworkResult($"Supabase initialization failed: {_e.Message}");
             }
         }
 
-        public static async Task<NetworkResult<GameDatabase>> GetPlayerData()
+        public static async Task<NetworkResult<GameDatabase>> GetData()
         {
+            Debug.Log("[Supabase] get game data...");
+
             if (Client == null)
-                return new NetworkResult<GameDatabase>("Supabase Client belum siap.");
+            {
+                Debug.LogError("[Supabase] Cannot fetch game data: client is not initialized.");
+                return new NetworkResult<GameDatabase>("Supabase client is not initialized.");
+            }
 
             if (!await NETWORK.IsConnection())
-                return new NetworkResult<GameDatabase>("No Internet");
+            {
+                Debug.LogWarning("[Supabase] Cannot fetch game data: no internet connection.");
+                return new NetworkResult<GameDatabase>("No internet connection.");
+            }
 
             try
             {
                 var _user = Client.Auth.CurrentUser;
 
                 if (_user == null)
-                    return new NetworkResult<GameDatabase>("User belum login.");
+                {
+                    Debug.LogWarning("[Supabase] Cannot fetch game data: user is not authenticated.");
+                    return new NetworkResult<GameDatabase>("User is not authenticated.");
+                }
 
                 var _response = await Client
                     .From<GameDatabase>()
@@ -68,66 +80,89 @@ namespace ACore
                     .Get();
 
                 if (_response.Models == null || _response.Models.Count == 0)
-                    return new NetworkResult<GameDatabase>("PlayerData tidak ditemukan.");
+                {
+                    Debug.LogWarning($"[Supabase] Game data not found for user: {_user.Id}");
+                    return new NetworkResult<GameDatabase>("Game data not found.");
+                }
+
+                Debug.Log("[Supabase] Game data get successfully.");
 
                 return new NetworkResult<GameDatabase>(_response.Models[0]);
             }
             catch (Exception _e)
             {
+                Debug.LogError($"[Supabase] Failed to fetch game data: {_e}");
                 return new NetworkResult<GameDatabase>(_e.Message);
             }
         }
 
-        public static async Task<NetworkResult> SavePlayerData()
+        public static async Task<NetworkResult> SaveData()
         {
-            return await SavePlayerData(STORAGE.GetJSON());
+            return await SaveData(STORAGE.GetJSON());
         }
-        
-        public static async Task<NetworkResult> SavePlayerData(string gameData)
+
+        public static async Task<NetworkResult> SaveData(string _gameData)
         {
-            Debug.Log("Start Saving Game Data to server");
-            
+            Debug.Log("[Supabase] Saving game data...");
+
             if (Client == null)
-                return new NetworkResult("Supabase Client belum siap.");
+            {
+                Debug.LogError("[Supabase] Cannot save game data: client is not initialized.");
+                return new NetworkResult("Supabase client is not initialized.");
+            }
 
             if (!await NETWORK.IsConnection())
-                return new NetworkResult("No Internet");
+            {
+                Debug.LogWarning("[Supabase] Cannot save game data: no internet connection.");
+                return new NetworkResult("No internet connection.");
+            }
 
             try
             {
                 var _user = Client.Auth.CurrentUser;
 
                 if (_user == null)
-                    return new NetworkResult("User belum login.");
+                {
+                    Debug.LogWarning("[Supabase] Cannot save game data: user is not authenticated.");
+                    return new NetworkResult("User is not authenticated.");
+                }
 
-                var _playerData = new GameDatabase
+                var _gameDatabase = new GameDatabase
                 {
                     Id = _user.Id,
-                    GameData = gameData
+                    GameData = _gameData
                 };
 
                 await Client
                     .From<GameDatabase>()
-                    .Upsert(_playerData);
+                    .Upsert(_gameDatabase);
 
-                Debug.Log("Successfully saved the game data to server.");
+                Debug.Log("[Supabase] Game data saved successfully.");
 
                 return new NetworkResult();
             }
             catch (Exception _e)
             {
-                Debug.Log($"Failed to save the game data to server. {_e}");
+                Debug.LogError($"[Supabase] Failed to save game data: {_e}");
                 return new NetworkResult(_e.Message);
             }
         }
 
         public static async Task<NetworkResult<DateTime>> GetTime()
         {
+            Debug.Log("[Supabase] Fetching server time...");
+
             if (Client == null)
-                return new NetworkResult<DateTime>("Supabase Client belum siap.");
+            {
+                Debug.LogError("[Supabase] Cannot fetch server time: client is not initialized.");
+                return new NetworkResult<DateTime>("Supabase client is not initialized.");
+            }
 
             if (!await NETWORK.IsConnection())
-                return new NetworkResult<DateTime>("No Internet");
+            {
+                Debug.LogWarning("[Supabase] Cannot fetch server time: no internet connection.");
+                return new NetworkResult<DateTime>("No internet connection.");
+            }
 
             try
             {
@@ -138,15 +173,16 @@ namespace ACore
                     )
                     .WithTimeout(5f);
 
-                return new NetworkResult<DateTime>(
-                    DateTime.Parse(_response.Content).ToUniversalTime()
-                );
+                var _serverTime = DateTime.Parse(_response.Content).ToUniversalTime();
+
+                Debug.Log($"[Supabase] Server time received: {_serverTime:O}");
+
+                return new NetworkResult<DateTime>(_serverTime);
             }
             catch (Exception _e)
             {
-                return new NetworkResult<DateTime>(
-                    $"Supabase Get Time Error: {_e}"
-                );
+                Debug.LogError($"[Supabase] Failed to fetch server time: {_e}");
+                return new NetworkResult<DateTime>($"Failed to fetch server time: {_e.Message}");
             }
         }
     }
