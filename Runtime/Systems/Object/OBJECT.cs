@@ -14,10 +14,12 @@ namespace ACore
         public static void Initialize()
         {
             var _objs = UnityEngine.Resources.LoadAll<ObjectBehaviour>("");
+
             foreach (var _obj in _objs)
-            {
+                Debug.Log($"[OBJECT] Loaded: {_obj.name} | {_obj.GetType().FullName}");
+
+            foreach (var _obj in _objs)
                 Resources.Add(_obj.GetType(), _obj);
-            }
         }
 
         public static T Show<T>(Transform parent = null) where T : ObjectBehaviour

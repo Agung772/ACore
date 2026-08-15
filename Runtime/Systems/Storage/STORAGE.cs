@@ -52,7 +52,7 @@ namespace ACore
             SupabaseManager.SaveData();
 #endif
 
-            Debug.Log($"Save Storage Data \n" +
+            Debug.Log($"Saving local game data \n" +
                       $"Path : {PathFile}");
         }
 
