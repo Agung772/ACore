@@ -10,8 +10,8 @@ namespace ACore
     public class AuthManager : GlobalBehaviour
     {
 #if UNITY_EDITOR
-        private string editorEmail = "test@gmail.com";
-        private string editorPassword = "test123";
+        private const string editorEmail = "test@gmail.com";
+        private const string editorPassword = "test123";
 #endif
 
         private bool isAuthenticating;

@@ -1,5 +1,3 @@
-using System;
-
 namespace ACore
 {
     public class NetworkResult
