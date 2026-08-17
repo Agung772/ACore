@@ -73,6 +73,40 @@ namespace ACore
 
 #endif
         }
+        
+        private async Task<NetworkResult> InitializeFirstGameData()
+        {
+            try
+            {
+                var _gameResult = await SupabaseManager.GetData();
+
+                if (_gameResult.IsSuccess)
+                {
+                    STORAGE.Replace(_gameResult.Value.GameData);
+                    return new NetworkResult();
+                }
+
+                if (_gameResult.Error != "Game data not found.")
+                {
+                    Debug.LogError($"[Auth] Failed to load game data: {_gameResult.Error}");
+                    return new NetworkResult(_gameResult.Error);
+                }
+
+                var _saveResult = await SupabaseManager.SaveData(
+                    STORAGE.GetJSON()
+                );
+
+                if (!_saveResult.IsSuccess)
+                    Debug.LogError($"[Auth] Failed to create game data: {_saveResult.Error}");
+
+                return _saveResult;
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
+            }
+        }
 
         private async Task<NetworkResult> InitializeGameData()
         {
@@ -270,7 +304,7 @@ namespace ACore
                         "Google authentication succeeded but Supabase user is null."
                     );
 
-                return await InitializeGameData();
+                return await InitializeFirstGameData();
             }
             catch (Exception _e)
             {
