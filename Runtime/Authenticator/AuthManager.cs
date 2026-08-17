@@ -16,16 +16,39 @@ namespace ACore
 
         private bool isAuthenticating;
 
-        public override async Task PostInitializeAsync() => await Setup().WithTimeout(5);
+        public override async Task PostInitializeAsync()
+        {
+            try
+            {
+                await Setup();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError($"[Auth] Initialization failed: {_e.Message}");
+            }
+        }
 
         private async Task Setup()
         {
             while (SupabaseManager.Client == null)
                 await Task.Delay(100);
 
-            if (!await NETWORK.IsConnection())
+            try
             {
-                Debug.LogError("[Auth] Initialization failed: no internet connection.");
+                if (!await NETWORK.IsConnection().WithTimeout(10))
+                {
+                    Debug.LogError("[Auth] No internet connection.");
+                    return;
+                }
+            }
+            catch (TimeoutException)
+            {
+                Debug.LogError("[Auth] Internet check timed out.");
+                return;
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError($"[Auth] Internet check failed: {_e.Message}");
                 return;
             }
 
@@ -41,52 +64,48 @@ namespace ACore
             var _result = await RestoreSession();
 
             if (_result.IsSuccess)
-            {
-                Debug.Log("[Auth] Existing session restored successfully.");
                 return;
-            }
-
-            Debug.Log($"[Auth] No valid session found: {_result.Error}");
 
             _result = await LoginGoogle();
 
             if (!_result.IsSuccess)
-            {
                 Debug.LogError($"[Auth] Google authentication failed: {_result.Error}");
-                return;
-            }
-
-            Debug.Log("[Auth] Google authentication completed successfully.");
 
 #endif
         }
 
         private async Task<NetworkResult> InitializeGameData()
         {
-            Debug.Log("[Auth] Initializing game data...");
-
-            var _gameResult = await SupabaseManager.GetData();
-
-            if (_gameResult.IsSuccess)
+            try
             {
-                STORAGE.TryReplace(_gameResult.Value.GameData);
-                return new NetworkResult();
-            }
+                var _gameResult = await SupabaseManager.GetData();
 
-            if (_gameResult.Error != "Game data not found.")
+                if (_gameResult.IsSuccess)
+                {
+                    STORAGE.TryReplace(_gameResult.Value.GameData);
+                    return new NetworkResult();
+                }
+
+                if (_gameResult.Error != "Game data not found.")
+                {
+                    Debug.LogError($"[Auth] Failed to load game data: {_gameResult.Error}");
+                    return new NetworkResult(_gameResult.Error);
+                }
+
+                var _saveResult = await SupabaseManager.SaveData(
+                    STORAGE.GetJSON()
+                );
+
+                if (!_saveResult.IsSuccess)
+                    Debug.LogError($"[Auth] Failed to create game data: {_saveResult.Error}");
+
+                return _saveResult;
+            }
+            catch (Exception _e)
             {
-                Debug.LogError($"[Auth] Failed to load game data: {_gameResult.Error}");
-                return new NetworkResult(_gameResult.Error);
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
             }
-
-            Debug.Log("[Auth] No game data found. Creating initial game data...");
-
-            var _saveResult = await SupabaseManager.SaveData(STORAGE.GetJSON());
-
-            if (_saveResult.IsSuccess)
-                Debug.Log("[Auth] Initial game data created successfully.");
-
-            return _saveResult;
         }
 
 #if UNITY_EDITOR
@@ -100,20 +119,22 @@ namespace ACore
 
             try
             {
-                Debug.Log("[Auth] Authenticating with editor account...");
-
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
                 {
-                    await SupabaseManager.Client.Auth.SignIn(editorEmail, editorPassword);
+                    await SupabaseManager.Client.Auth.SignIn(
+                        editorEmail,
+                        editorPassword
+                    );
+
                     _user = SupabaseManager.Client.Auth.CurrentUser;
                 }
 
                 if (_user == null)
-                    return new NetworkResult("Editor authentication succeeded but user is null.");
-
-                Debug.Log($"[Auth] Editor authentication successful. User ID: {_user.Id}");
+                    return new NetworkResult(
+                        "Editor authentication succeeded but user is null."
+                    );
 
                 return await InitializeGameData();
             }
@@ -134,14 +155,10 @@ namespace ACore
         {
             try
             {
-                Debug.Log("[Auth] Checking for existing session...");
-
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
                     return new NetworkResult("No active session found.");
-
-                Debug.Log($"[Auth] Existing session found. User ID: {_user.Id}");
 
                 return await InitializeGameData();
             }
@@ -157,8 +174,21 @@ namespace ACore
             if (SupabaseManager.Client == null)
                 return new NetworkResult("Supabase client is not initialized.");
 
-            if (!await NETWORK.IsConnection())
-                return new NetworkResult("No internet connection.");
+            try
+            {
+                if (!await NETWORK.IsConnection().WithTimeout(10))
+                    return new NetworkResult("No internet connection.");
+            }
+            catch (TimeoutException)
+            {
+                return new NetworkResult("Internet connection check timed out.");
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult(
+                    $"Internet connection check failed: {_e.Message}"
+                );
+            }
 
             if (isAuthenticating)
                 return new NetworkResult("Authentication is already in progress.");
@@ -167,24 +197,46 @@ namespace ACore
 
             try
             {
-                Debug.Log("[Auth] Starting Google authentication...");
+                var _settings = GAME.GetSO<ASettingData>();
 
-                GoogleSignIn.Configuration = new GoogleSignInConfiguration
-                {
-                    WebClientId = GAME.GetSO<ASettingData>().supabase.clintID,
-                    RequestIdToken = true,
-                    RequestEmail = true
-                };
+                if (_settings == null)
+                    return new NetworkResult("ASettingData is null.");
 
-                var _googleUser = await GoogleSignIn.DefaultInstance.SignIn();
+                if (_settings.supabase == null)
+                    return new NetworkResult("Supabase settings are null.");
+
+                string _webClientId = _settings.supabase.clintID;
+
+                if (string.IsNullOrWhiteSpace(_webClientId))
+                    return new NetworkResult("Google Web Client ID is empty.");
+
+                string _clientIdPrefix = _webClientId.Substring(
+                    0,
+                    Mathf.Min(20, _webClientId.Length)
+                );
+
+                Debug.Log($"[Auth] WebClientId: {_clientIdPrefix}...");
+
+                GoogleSignIn.Configuration =
+                    new GoogleSignInConfiguration
+                    {
+                        WebClientId = _webClientId,
+                        RequestIdToken = true,
+                        RequestEmail = true
+                    };
+
+                var _googleUser =
+                    await GoogleSignIn.DefaultInstance.SignIn();
 
                 if (_googleUser == null)
-                    return new NetworkResult("Google authentication returned a null user.");
+                    return new NetworkResult(
+                        "Google authentication returned a null user."
+                    );
 
                 if (string.IsNullOrEmpty(_googleUser.IdToken))
-                    return new NetworkResult("Google authentication returned an empty ID token.");
-
-                Debug.Log($"[Auth] Google authentication successful. Email: {_googleUser.Email}");
+                    return new NetworkResult(
+                        "Google authentication returned an empty ID token."
+                    );
 
                 return await LoginGoogleInternal(_googleUser.IdToken);
             }
@@ -201,10 +253,11 @@ namespace ACore
 
         private async Task<NetworkResult> LoginGoogleInternal(string _idToken)
         {
+            if (string.IsNullOrEmpty(_idToken))
+                return new NetworkResult("Google ID token is empty.");
+
             try
             {
-                Debug.Log("[Auth] Signing in to Supabase with Google ID token...");
-
                 await SupabaseManager.Client.Auth.SignInWithIdToken(
                     Supabase.Gotrue.Constants.Provider.Google,
                     _idToken
@@ -213,9 +266,9 @@ namespace ACore
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
-                    return new NetworkResult("Google authentication succeeded but Supabase user is null.");
-
-                Debug.Log($"[Auth] Supabase Google authentication successful. User ID: {_user.Id}");
+                    return new NetworkResult(
+                        "Google authentication succeeded but Supabase user is null."
+                    );
 
                 return await InitializeGameData();
             }
@@ -229,30 +282,48 @@ namespace ACore
         public async Task<NetworkResult<bool>> Logout()
         {
             if (SupabaseManager.Client == null)
-                return new NetworkResult<bool>("Supabase client is not initialized.");
-
-            if (!await NETWORK.IsConnection())
-                return new NetworkResult<bool>("No internet connection.");
+                return new NetworkResult<bool>(
+                    "Supabase client is not initialized."
+                );
 
             try
             {
-                Debug.Log("[Auth] Signing out...");
+                if (!await NETWORK.IsConnection().WithTimeout(10))
+                    return new NetworkResult<bool>("No internet connection.");
+            }
+            catch (TimeoutException)
+            {
+                return new NetworkResult<bool>(
+                    "Internet connection check timed out."
+                );
+            }
+            catch (Exception _e)
+            {
+                return new NetworkResult<bool>(
+                    $"Internet connection check failed: {_e.Message}"
+                );
+            }
 
+            try
+            {
                 await SupabaseManager.Client.Auth.SignOut();
-
-                Debug.Log("[Auth] Sign out completed successfully.");
-
                 return new NetworkResult<bool>(true);
             }
             catch (Exception _e)
             {
-                Debug.LogError($"[Auth] Sign out failed: {_e}");
+                Debug.LogError($"[Auth] Sign out failed: {_e.Message}");
                 return new NetworkResult<bool>(_e.Message);
             }
         }
 
         private void HandleAuthException(Exception _e)
         {
+            if (_e == null)
+            {
+                Debug.LogError("[Auth] Unknown authentication error.");
+                return;
+            }
+
             var _message = _e.Message;
 
             if (_message.Contains("over_email_send_rate_limit"))
@@ -269,7 +340,9 @@ namespace ACore
 
             if (_message.Contains("invalid_credentials"))
             {
-                Debug.LogError("[Auth] Editor authentication failed: invalid email or password.");
+                Debug.LogError(
+                    "[Auth] Editor authentication failed: invalid credentials."
+                );
                 return;
             }
 
