@@ -65,6 +65,9 @@ namespace ACore
         
         public static bool TryReplace(GameData newData)
         {
+            Debug.Log($"try replaced GameData, " +
+                      $"new data: {newData.Get<MetaStorage>().lastSave}, " +
+                      $"local data: {data.Get<MetaStorage>().lastSave}");
             if (newData.Get<MetaStorage>().lastSave > data.Get<MetaStorage>().lastSave)
             {
                 data = newData;
