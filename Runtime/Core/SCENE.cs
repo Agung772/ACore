@@ -39,7 +39,6 @@ namespace ACore
                 onProgress?.Invoke(_progress);
                 yield return null;
             }
-            
 
             var _isCompleted = false;
             _async.completed += _ => _isCompleted = true;

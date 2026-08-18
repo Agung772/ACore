@@ -61,14 +61,8 @@ namespace ACore
             DontDestroyOnLoad(gameObject);
             SCENE.Initialize();
             GAME.Manager = this;
-            GAME.Initialize();
-            Debug.Log($"{nameof(ACore)}: Initialize void Completed");
-            yield return GAME.InitializeCoroutine();
-            Debug.Log($"{nameof(ACore)}: Initialize Coroutine Completed");
-
-            var _task = GAME.InitializeAsync();
-            yield return new WaitUntil(() => _task.IsCompleted);
-            Debug.Log($"{nameof(ACore)}: Initialize Async Completed");
+            
+            yield return GAME.Initialize();
             
             if (SceneManager.GetActiveScene().buildIndex == 0)
             {

@@ -33,34 +33,18 @@ namespace ACore
             while (SupabaseManager.Client == null)
                 await Task.Delay(100);
 
-            try
+            if (!await NETWORK.IsConnection().WithTimeout(10))
             {
-                if (!await NETWORK.IsConnection().WithTimeout(10))
-                {
-                    Debug.LogError("[Auth] No internet connection.");
-                    return;
-                }
-            }
-            catch (TimeoutException)
-            {
-                Debug.LogError("[Auth] Internet check timed out.");
-                return;
-            }
-            catch (Exception _e)
-            {
-                Debug.LogError($"[Auth] Internet check failed: {_e.Message}");
+                Debug.LogError("[Auth] No internet connection.");
                 return;
             }
 
 #if UNITY_EDITOR
-
             var _result = await LoginEditorAccount();
 
             if (!_result.IsSuccess)
                 Debug.LogError($"[Auth] Editor authentication failed: {_result.Error}");
-
 #else
-
             var _result = await RestoreSession();
 
             if (_result.IsSuccess)
@@ -70,7 +54,6 @@ namespace ACore
 
             if (!_result.IsSuccess)
                 Debug.LogError($"[Auth] Google authentication failed: {_result.Error}");
-
 #endif
         }
         
@@ -208,21 +191,8 @@ namespace ACore
             if (SupabaseManager.Client == null)
                 return new NetworkResult("Supabase client is not initialized.");
 
-            try
-            {
-                if (!await NETWORK.IsConnection().WithTimeout(10))
-                    return new NetworkResult("No internet connection.");
-            }
-            catch (TimeoutException)
-            {
-                return new NetworkResult("Internet connection check timed out.");
-            }
-            catch (Exception _e)
-            {
-                return new NetworkResult(
-                    $"Internet connection check failed: {_e.Message}"
-                );
-            }
+            if (!await NETWORK.IsConnection().WithTimeout(10))
+                return new NetworkResult("No internet connection.");
 
             if (isAuthenticating)
                 return new NetworkResult("Authentication is already in progress.");
@@ -239,17 +209,10 @@ namespace ACore
                 if (_settings.supabase == null)
                     return new NetworkResult("Supabase settings are null.");
 
-                string _webClientId = _settings.supabase.clintID;
+                string _webClientId = _settings.supabase.webClientID;
 
                 if (string.IsNullOrWhiteSpace(_webClientId))
                     return new NetworkResult("Google Web Client ID is empty.");
-
-                string _clientIdPrefix = _webClientId.Substring(
-                    0,
-                    Mathf.Min(20, _webClientId.Length)
-                );
-
-                Debug.Log($"[Auth] WebClientId: {_clientIdPrefix}...");
 
                 GoogleSignIn.Configuration =
                     new GoogleSignInConfiguration
@@ -263,14 +226,10 @@ namespace ACore
                     await GoogleSignIn.DefaultInstance.SignIn();
 
                 if (_googleUser == null)
-                    return new NetworkResult(
-                        "Google authentication returned a null user."
-                    );
+                    return new NetworkResult("Google authentication returned a null user.");
 
                 if (string.IsNullOrEmpty(_googleUser.IdToken))
-                    return new NetworkResult(
-                        "Google authentication returned an empty ID token."
-                    );
+                    return new NetworkResult("Google authentication returned an empty ID token.");
 
                 return await LoginGoogleInternal(_googleUser.IdToken);
             }
@@ -300,9 +259,7 @@ namespace ACore
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
-                    return new NetworkResult(
-                        "Google authentication succeeded but Supabase user is null."
-                    );
+                    return new NetworkResult("Google authentication succeeded but Supabase user is null.");
 
                 return await InitializeFirstGameData();
             }
@@ -316,27 +273,10 @@ namespace ACore
         public async Task<NetworkResult<bool>> Logout()
         {
             if (SupabaseManager.Client == null)
-                return new NetworkResult<bool>(
-                    "Supabase client is not initialized."
-                );
+                return new NetworkResult<bool>("Supabase client is not initialized.");
 
-            try
-            {
-                if (!await NETWORK.IsConnection().WithTimeout(10))
-                    return new NetworkResult<bool>("No internet connection.");
-            }
-            catch (TimeoutException)
-            {
-                return new NetworkResult<bool>(
-                    "Internet connection check timed out."
-                );
-            }
-            catch (Exception _e)
-            {
-                return new NetworkResult<bool>(
-                    $"Internet connection check failed: {_e.Message}"
-                );
-            }
+            if (!await NETWORK.IsConnection().WithTimeout(10))
+                return new NetworkResult<bool>("No internet connection.");
 
             try
             {
@@ -374,9 +314,7 @@ namespace ACore
 
             if (_message.Contains("invalid_credentials"))
             {
-                Debug.LogError(
-                    "[Auth] Editor authentication failed: invalid credentials."
-                );
+                Debug.LogError("[Auth] Editor authentication failed: invalid credentials.");
                 return;
             }
 

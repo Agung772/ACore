@@ -14,35 +14,43 @@ namespace ACore
         public static string CurrentScene { get; set; }
         private static Dictionary<Type, GlobalBehaviour> globals;
         private static Dictionary<Type, LocalBehaviour> locals = new();
-
-
-        public static void Initialize()
+        
+        public static IEnumerator Initialize()
         {
-            CreateGlobal();
+            Debug.Log($"[{nameof(ACore)}] Start Booting...");
+            
+            OBJECT.Initialize();
+            STORAGE.Initialize();
             SCENE.OnUnloaded += UnloadedLocal;
+            
+            CreateGlobal();
+            
+            yield return InitializeCoroutine();
+            Debug.Log($"[{nameof(ACore)}] Initialize Coroutine Completed");
+            
+            var _task = InitializeAsync();
+            yield return new WaitUntil(() => _task.IsCompleted);
+            Debug.Log($"[{nameof(ACore)}] Initialize Async Completed");
+        }
+        
+        private static void CreateGlobal()
+        {
+            globals = InstanceUtility.Create<GlobalBehaviour>();
+            var _orderGlobal = OrderGlobal(globals.Values.ToArray());
+            foreach (var _global in _orderGlobal) { _global.Initialize(); }
+            foreach (var _global in _orderGlobal) { _global.PostInitialize(); }
         }
 
-        public static IEnumerator InitializeCoroutine()
+        private static IEnumerator InitializeCoroutine()
         {
             foreach (var _global in globals.Values) { yield return _global.InitializeCoroutine(); }
             foreach (var _global in globals.Values) { yield return _global.PostInitializeCoroutine(); }
         }
         
-        public static async Task InitializeAsync()
+        private static async Task InitializeAsync()
         {
             foreach (var _global in globals.Values) { await _global.InitializeAsync(); }
             foreach (var _global in globals.Values) { await _global.PostInitializeAsync(); }
-        }
-        
-        private static void CreateGlobal()
-        {
-            OBJECT.Initialize();
-            STORAGE.Initialize();
-            
-            globals = InstanceUtility.Create<GlobalBehaviour>();
-            var _orderGlobal = OrderGlobal(globals.Values.ToArray());
-            foreach (var _global in _orderGlobal) { _global.Initialize(); }
-            foreach (var _global in _orderGlobal) { _global.PostInitialize(); }
         }
 
         private static GlobalBehaviour[] OrderGlobal(GlobalBehaviour[] global)
