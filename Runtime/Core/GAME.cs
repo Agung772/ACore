@@ -15,48 +15,42 @@ namespace ACore
         private static Dictionary<Type, GlobalBehaviour> globals;
         private static Dictionary<Type, LocalBehaviour> locals = new();
         
-        public static IEnumerator Initialize()
+        public static IEnumerator Initialize(Action<float> onProgress = null)
         {
             Debug.Log($"[{nameof(ACore)}] Start Booting...");
             
-            OBJECT.Initialize();
-            STORAGE.Initialize();
             SCENE.OnUnloaded += UnloadedLocal;
-            
-            CreateGlobal();
-            
-            yield return InitializeCoroutine();
-            Debug.Log($"[{nameof(ACore)}] Initialize Coroutine Completed");
-            
-            var _task = InitializeAsync();
-            yield return new WaitUntil(() => _task.IsCompleted);
-            Debug.Log($"[{nameof(ACore)}] Initialize Async Completed");
-        }
-        
-        private static void CreateGlobal()
-        {
-            globals = InstanceUtility.Create<GlobalBehaviour>();
-            var _orderGlobal = OrderGlobal(globals.Values.ToArray());
-            foreach (var _global in _orderGlobal) { _global.Initialize(); }
-            foreach (var _global in _orderGlobal) { _global.PostInitialize(); }
-        }
 
-        private static IEnumerator InitializeCoroutine()
-        {
-            foreach (var _global in globals.Values) { yield return _global.InitializeCoroutine(); }
-            foreach (var _global in globals.Values) { yield return _global.PostInitializeCoroutine(); }
+            globals = InstanceUtility.Create<GlobalBehaviour>();
+
+            var _globals = globals.Values.ToArray();
+            var _count = _globals.Length;
+
+            for (int _i = 0; _i < _count; _i++)
+            {
+                yield return _globals[_i].RunInitialize();
+                onProgress?.Invoke((_i + 1) / (float)_count * 0.5f);
+            }
+
+            for (int _i = 0; _i < _count; _i++)
+            {
+                yield return _globals[_i].RunPostInitialize();
+                onProgress?.Invoke(0.5f + (_i + 1) / (float)_count * 0.5f);
+            }
+
+            onProgress?.Invoke(1f);
+
+            Debug.Log($"[{nameof(ACore)}] Booting Completed");
         }
         
         private static async Task InitializeAsync()
         {
             foreach (var _global in globals.Values) { await _global.InitializeAsync(); }
-            foreach (var _global in globals.Values) { await _global.PostInitializeAsync(); }
         }
-
-        private static GlobalBehaviour[] OrderGlobal(GlobalBehaviour[] global)
+        
+        private static async Task PostInitializeAsync()
         {
-            var _global = global.OrderBy(local => local.Order).ToArray();
-            return _global;
+            foreach (var _global in globals.Values) { await _global.PostInitializeAsync(); }
         }
 
         private static void UnloadedLocal()

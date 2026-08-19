@@ -1,8 +1,10 @@
 #if GOOGLE_MOBILE
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using GoogleMobileAds.Api;
+using UnityEngine;
 
 namespace ACore.Google
 {
@@ -10,24 +12,28 @@ namespace ACore.Google
     {
         private bool hasInitialize;
         private Dictionary<Type, AdBase> instances = new();
-
-        public override void Initialize()
+        
+        public override IEnumerator InitializeCoroutine()
         {
             var _setting = GAME.GetSO<ASettingData>();
-            if (!_setting.isGooglePlay) return;
+            if (!_setting.isGooglePlay) yield break;
+            if (_setting.googlePlay.noAds) yield break;
             
-            var _googleSetting = _setting.googlePlay;
-            if (_googleSetting.noAds) return;
-            
+            var _isCompleted = false;
             MobileAds.Initialize(_=> 
             {
-                hasInitialize = true;
                 instances = InstanceUtility.Create<AdBase>();
                 foreach (var _google in instances.Values)
                 {
                     _google.Initialize();
                 }
+
+                hasInitialize = true;
+                _isCompleted = true;
+                Debug.Log("[AdMob] Initialize successfully");
             });
+            
+            yield return new WaitUntil(() => _isCompleted);
         }
 
         public bool IsActive<T>() where T : AdBase
@@ -35,6 +41,7 @@ namespace ACore.Google
             var _instance = Get<T>();
             return _instance != null && _instance.CanShow();
         }
+        
         public T Get<T>() where T : AdBase
         {
             if (instances.TryGetValue(typeof(T), out var _instance))
@@ -44,6 +51,7 @@ namespace ACore.Google
 
             return null;
         }
+        
         public bool TryGet<T>(out T instance) where T : AdBase
         {
             if (hasInitialize)

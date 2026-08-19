@@ -105,7 +105,8 @@ namespace ACore
         
         public static bool IsActive<T>() where T : ObjectBehaviour
         {
-            return Active.ContainsKey(typeof(T));
+            return Resources.ContainsKey(typeof(T)) && 
+                   Active.ContainsKey(typeof(T));
         }
 
         public static bool TryGet<T>(out T obj) where T : ObjectBehaviour

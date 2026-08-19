@@ -4,7 +4,8 @@
     "references": [
         "LeanTween",
         "Google.Play.Games",
-        "Google"
+        "Google.SignIn",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

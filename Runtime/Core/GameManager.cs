@@ -59,10 +59,20 @@ namespace ACore
         private IEnumerator Initialize()
         {
             DontDestroyOnLoad(gameObject);
-            SCENE.Initialize();
             GAME.Manager = this;
-            
-            yield return GAME.Initialize();
+            SCENE.Initialize();
+            OBJECT.Initialize();
+            STORAGE.Initialize();
+
+            if (OBJECT.TryShow<BootingPopup>(out var _popup))
+            {
+                yield return GAME.Initialize(_popup.Setup);
+                _popup.Remove();
+            }
+            else
+            {
+                yield return GAME.Initialize();
+            }
             
             if (SceneManager.GetActiveScene().buildIndex == 0)
             {

@@ -1,6 +1,7 @@
 #if GOOGLE_MOBILE
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using GooglePlayGames;
 using UnityEngine;
@@ -11,57 +12,44 @@ namespace ACore.Google
     public class PlayGamesManager : GlobalBehaviour
     { 
         private bool hasInitialize;
-        private int maxTryAgain = 3;
-        private int countTryAgain;
         public event Action OnInitialize;
         private Dictionary<Type, PlayGamesBase> instances = new();
 
-        public override void Initialize()
+        public override IEnumerator InitializeCoroutine()
         {
-            if (!GAME.GetSO<ASettingData>().isGooglePlay) return;
-            
+            if (!GAME.GetSO<ASettingData>().isGooglePlay) yield break;
             PlayGamesPlatform.Activate();
-            RequestPlayGames(() =>
-            {
-                hasInitialize = true;
-                instances = InstanceUtility.Create<PlayGamesBase>();
-                foreach (var _google in instances.Values)
-                {
-                    _google.Initialize();
-                }
-                OnInitialize?.Invoke();
-            });
-        }
-
-        private void RequestPlayGames(Action onComplete)
-        {
+            
+            var _isCompleted = false;
             Social.localUser.Authenticate(success =>
             {
                 if (success)
                 {
-                    onComplete.Invoke();
-                    Debug.Log("Login with Google Play games successful.");
+                    hasInitialize = true;
+                    instances = InstanceUtility.Create<PlayGamesBase>();
+                    foreach (var _google in instances.Values)
+                    {
+                        _google.Initialize();
+                    }
+                    OnInitialize?.Invoke();
+                    Debug.Log("[Google Play Games] Authentication successfully");
                 }
                 else
                 {
-                    if (countTryAgain < maxTryAgain)
-                    {
-                        countTryAgain++;
-                        GAME.Manager.gameObject.LeanDelayedCall(1f, () =>
-                        {
-                            RequestPlayGames(onComplete);
-                        });
-                    }
- 
-                    Debug.Log("Login Unsuccessful.");
+                    Debug.Log("[Google Play Games] Authentication failed");
                 }
+
+                _isCompleted = true;
             });
+            
+            yield return new WaitUntil(() => _isCompleted);
         }
         
         public bool IsActive<T>() where T : PlayGamesBase
         {
             return hasInitialize;
         }
+        
         public T Get<T>() where T : PlayGamesBase
         {
             if (instances.TryGetValue(typeof(T), out var _instance))
@@ -71,6 +59,7 @@ namespace ACore.Google
 
             return null;
         }
+        
         public bool TryGet<T>(out T instance) where T : PlayGamesBase
         {
             if (hasInitialize)
