@@ -26,6 +26,8 @@ namespace ACore
             {
                 Debug.LogError($"[Auth] Initialization failed: {_e.Message}");
             }
+
+            SCENE.OnLoaded += STORAGE.Save;
         }
 
         private async Task Setup()
@@ -187,6 +189,7 @@ namespace ACore
                     return new NetworkResult("No active session found.");
                 }
 
+                Debug.Log("[Auth] Restore session completed");
                 return await InitializeGameData();
             }
             catch (Exception _e)

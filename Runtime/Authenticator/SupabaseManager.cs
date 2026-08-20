@@ -12,7 +12,10 @@ namespace ACore
     {
         public static Client Client { get; private set; }
 
-        public override async Task InitializeAsync() => await Setup().WithTimeout(5);
+        public override async Task InitializeAsync()
+        {
+            await Setup().WithTimeout(5);
+        }
 
         private async Task<NetworkResult> Setup()
         {
