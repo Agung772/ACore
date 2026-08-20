@@ -30,7 +30,7 @@ namespace ACore
 
         private async Task Setup()
         {
-            Debug.LogError("[Auth] Initializing...");
+            Debug.Log("[Auth] Initializing...");
             while (SupabaseManager.Client == null)
                 await Task.Delay(100);
 
@@ -44,7 +44,7 @@ namespace ACore
             var _result = await LoginEditorAccount();
 
             if (_result.IsSuccess)
-                Debug.LogError("[Auth] Initialization completed");
+                Debug.Log("[Auth] Initialization completed");
             else
                 Debug.LogError($"[Auth] Editor authentication failed: {_result.Error}");
 #else
@@ -52,13 +52,13 @@ namespace ACore
 
             if (_result.IsSuccess)
             {
-                Debug.LogError("[Auth] Initialization completed");
+                Debug.Log("[Auth] Initialization completed");
                 return;
             }
 
             _result = await LoginGoogle();
             if (_result.IsSuccess)
-                Debug.LogError("[Auth] Initialization completed");
+                Debug.Log("[Auth] Initialization completed");
             else
                 Debug.LogError($"[Auth] Google authentication failed: {_result.Error}");
 #endif
