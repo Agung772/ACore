@@ -12,7 +12,7 @@ namespace ACore
         public void Setup(float progress)
         {
             loadingSlider.value = progress;
-            loadingTx.text = $"{progress * 100}%";
+            loadingTx.text = $"{progress * 100:F0}%";
         }
     }
 }
