@@ -182,7 +182,10 @@ namespace ACore
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
+                {
+                    Debug.Log("[Auth] No active session found.");
                     return new NetworkResult("No active session found.");
+                }
 
                 return await InitializeGameData();
             }
