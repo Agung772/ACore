@@ -96,9 +96,9 @@ namespace ACore
             }
         }
 
-        private static void ReportProgress(Action<float> _onProgress, int _phase, int _index, int _count)
+        private static void ReportProgress(Action<float> onProgress, int phase, int index, int count)
         {
-            _onProgress?.Invoke((_phase + (_index + 1f) / _count) / 6f);
+            onProgress?.Invoke((phase + (index + 1f) / count) / 6f);
         }
 
         private static void UnloadedLocal()
