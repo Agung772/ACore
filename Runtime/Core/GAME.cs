@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -18,39 +17,88 @@ namespace ACore
         public static IEnumerator Initialize(Action<float> onProgress = null)
         {
             Debug.Log($"[{nameof(ACore)}] Start Booting...");
-            
-            SCENE.OnUnloaded += UnloadedLocal;
 
+            SCENE.OnUnloaded += UnloadedLocal;
             globals = InstanceUtility.Create<GlobalBehaviour>();
 
             var _globals = globals.Values.ToArray();
             var _count = _globals.Length;
-
-            for (int _i = 0; _i < _count; _i++)
-            {
-                yield return _globals[_i].RunInitialize();
-                onProgress?.Invoke((_i + 1) / (float)_count * 0.5f);
-            }
-
-            for (int _i = 0; _i < _count; _i++)
-            {
-                yield return _globals[_i].RunPostInitialize();
-                onProgress?.Invoke(0.5f + (_i + 1) / (float)_count * 0.5f);
-            }
+            
+            InitializeGlobals(_globals, _count, onProgress);
+            yield return InitializeCoroutines(_globals, _count, onProgress);
+            yield return InitializeAsync(_globals, _count, onProgress);
+            PostInitializeGlobals(_globals, _count, onProgress);
+            yield return PostInitializeCoroutines(_globals, _count, onProgress);
+            yield return PostInitializeAsync(_globals, _count, onProgress);
 
             onProgress?.Invoke(1f);
 
             Debug.Log($"[{nameof(ACore)}] Booting Completed");
         }
-        
-        private static async Task InitializeAsync()
+
+        private static void InitializeGlobals(GlobalBehaviour[] globals, int count, Action<float> onProgress)
         {
-            foreach (var _global in globals.Values) { await _global.InitializeAsync(); }
+            for (int _i = 0; _i < count; _i++)
+            {
+                globals[_i].Initialize();
+                ReportProgress(onProgress, 0, _i, count);
+            }
         }
-        
-        private static async Task PostInitializeAsync()
+
+        private static IEnumerator InitializeCoroutines(GlobalBehaviour[] globals, int count, Action<float> onProgress)
         {
-            foreach (var _global in globals.Values) { await _global.PostInitializeAsync(); }
+            for (int _i = 0; _i < count; _i++)
+            {
+                yield return globals[_i].InitializeCoroutine();
+                ReportProgress(onProgress, 1, _i, count);
+            }
+        }
+
+        private static IEnumerator InitializeAsync(GlobalBehaviour[] globals, int count, Action<float> onProgress)
+        {
+            for (int _i = 0; _i < count; _i++)
+            {
+                var _task = globals[_i].InitializeAsync();
+                while (!_task.IsCompleted) yield return null;
+                if (_task.IsFaulted) throw _task.Exception;
+
+                ReportProgress(onProgress, 2, _i, count);
+            }
+        }
+
+        private static void PostInitializeGlobals(GlobalBehaviour[] globals, int count, Action<float> onProgress)
+        {
+            for (int _i = 0; _i < count; _i++)
+            {
+                globals[_i].PostInitialize();
+                ReportProgress(onProgress, 3, _i, count);
+            }
+        }
+
+        private static IEnumerator PostInitializeCoroutines(GlobalBehaviour[] globals, int count, Action<float> onProgress)
+        {
+            for (int _i = 0; _i < count; _i++)
+            {
+                yield return globals[_i].PostInitializeCoroutine();
+                ReportProgress(onProgress, 4, _i, count);
+            }
+        }
+
+        private static IEnumerator PostInitializeAsync(GlobalBehaviour[] globals, int count, Action<float> onProgress)
+        {
+            for (int _i = 0; _i < count; _i++)
+            {
+                var _task = globals[_i].PostInitializeAsync();
+                while (!_task.IsCompleted) yield return null;
+                if (_task.IsFaulted) throw _task.Exception;
+
+                ReportProgress(onProgress, 5, _i, count);
+            }
+        }
+
+        private static void ReportProgress(Action<float> _onProgress, int _phase, int _index, int _count)
+        {
+            _onProgress?.Invoke((_phase + (_index + 1f) / _count) / 6f);
         }
 
         private static void UnloadedLocal()

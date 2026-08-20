@@ -32,8 +32,6 @@ namespace ACore
                     }
                 );
 
-                Debug.Log("[Supabase] Client created.");
-
                 await Client.InitializeAsync();
 
                 Debug.Log("[Supabase] Initialization completed.");

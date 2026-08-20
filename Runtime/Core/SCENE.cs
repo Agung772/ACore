@@ -24,10 +24,10 @@ namespace ACore
         
         public static void LoadScene(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
         {
-            GAME.Manager.StartCoroutine(LoadSceneAsync(sceneName, onProgress, removeAllPopup, onComplete));
+            GAME.Manager.StartCoroutine(LoadSceneCoroutine(sceneName, onProgress, removeAllPopup, onComplete));
         }
 
-        private static IEnumerator LoadSceneAsync(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
+        public static IEnumerator LoadSceneCoroutine(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
         {
             OBJECT.RemoveOnLoaded(removeAllPopup);
             var _async = SceneManager.LoadSceneAsync(sceneName);

@@ -65,20 +65,20 @@ namespace ACore
             STORAGE.Initialize();
 
             if (OBJECT.TryShow<BootingPopup>(out var _popup))
-            {
                 yield return GAME.Initialize(_popup.Setup);
-                _popup.Remove();
-            }
             else
-            {
                 yield return GAME.Initialize();
-            }
             
             if (SceneManager.GetActiveScene().buildIndex == 0)
             {
                 var _scenePath = SceneUtility.GetScenePathByBuildIndex(1);
                 var _sceneName = Path.GetFileNameWithoutExtension(_scenePath);
-                SCENE.LoadScene(_sceneName);
+                yield return SCENE.LoadSceneCoroutine(_sceneName);
+            }
+
+            if (_popup != null)
+            {
+                _popup.Remove();
             }
         }
 
