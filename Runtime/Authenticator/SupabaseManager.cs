@@ -34,7 +34,7 @@ namespace ACore
 
                 await Client.InitializeAsync();
 
-                Debug.Log("[Supabase] Initialization completed.");
+                Debug.Log("[Supabase] Initialization completed");
 
                 return new NetworkResult();
             }

@@ -30,6 +30,7 @@ namespace ACore
 
         private async Task Setup()
         {
+            Debug.LogError("[Auth] Initializing...");
             while (SupabaseManager.Client == null)
                 await Task.Delay(100);
 
@@ -42,17 +43,23 @@ namespace ACore
 #if UNITY_EDITOR
             var _result = await LoginEditorAccount();
 
-            if (!_result.IsSuccess)
+            if (_result.IsSuccess)
+                Debug.LogError("[Auth] Initialization completed");
+            else
                 Debug.LogError($"[Auth] Editor authentication failed: {_result.Error}");
 #else
             var _result = await RestoreSession();
 
             if (_result.IsSuccess)
+            {
+                Debug.LogError("[Auth] Initialization completed");
                 return;
+            }
 
             _result = await LoginGoogle();
-
-            if (!_result.IsSuccess)
+            if (_result.IsSuccess)
+                Debug.LogError("[Auth] Initialization completed");
+            else
                 Debug.LogError($"[Auth] Google authentication failed: {_result.Error}");
 #endif
         }
