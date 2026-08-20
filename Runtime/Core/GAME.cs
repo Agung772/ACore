@@ -28,8 +28,9 @@ namespace ACore
             PostInitializeGlobals(_globals, _count, onProgress);
             yield return PostInitializeCoroutines(_globals, _count, onProgress);
             yield return PostInitializeAsync(_globals, _count, onProgress);
-
+            
             onProgress?.Invoke(1f);
+            yield return null;
         }
 
         private static void InitializeGlobals(GlobalBehaviour[] globals, int count, Action<float> onProgress)
