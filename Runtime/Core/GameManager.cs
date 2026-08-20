@@ -58,6 +58,8 @@ namespace ACore
 
         private IEnumerator Initialize()
         {
+            Debug.Log($"[{nameof(ACore)}] Start Booting...");
+            
             DontDestroyOnLoad(gameObject);
             GAME.Manager = this;
             SCENE.Initialize();
@@ -80,6 +82,8 @@ namespace ACore
             {
                 _popup.Remove();
             }
+            
+            Debug.Log($"[{nameof(ACore)}] Booting Completed");
         }
 
         private void OnApplicationPause(bool pauseStatus)

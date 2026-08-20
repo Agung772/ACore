@@ -16,8 +16,6 @@ namespace ACore
         
         public static IEnumerator Initialize(Action<float> onProgress = null)
         {
-            Debug.Log($"[{nameof(ACore)}] Start Booting...");
-
             SCENE.OnUnloaded += UnloadedLocal;
             globals = InstanceUtility.Create<GlobalBehaviour>();
 
@@ -32,8 +30,6 @@ namespace ACore
             yield return PostInitializeAsync(_globals, _count, onProgress);
 
             onProgress?.Invoke(1f);
-
-            Debug.Log($"[{nameof(ACore)}] Booting Completed");
         }
 
         private static void InitializeGlobals(GlobalBehaviour[] globals, int count, Action<float> onProgress)
