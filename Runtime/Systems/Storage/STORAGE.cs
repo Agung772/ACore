@@ -11,11 +11,16 @@ namespace ACore
         public static T Get<T>() where T : BaseStorage, new() => data.Get<T>();
         public static string GetJSON() => data.GetJSON();
         public static void SetJSON(string json) => data.SetJSON(json);
+        private static bool autoSave = true;
         
         public static void Initialize()
         {
             Load();
-            Application.quitting += Save;
+            if (GAME.TryGetSO<ASettingData>(out var _so))
+            {
+                autoSave = _so.autoSave;
+            }
+            Application.quitting += TrySave;
         }
         
         private static void Load()
@@ -28,7 +33,7 @@ namespace ACore
             }
             else
             {
-                Debug.LogWarning("Storage data not found");
+                Debug.LogWarning("[Storage] local game data not found");
                 data.New();
             }
         }
@@ -51,9 +56,16 @@ namespace ACore
 #if SUPABASE
             SupabaseManager.SaveData();
 #endif
-
-            Debug.Log($"Saving local game data \n" +
+            Debug.Log($"[Storage] Saving local game data \n" +
                       $"Path : {PathFile}");
+        }
+
+        public static void TrySave()
+        {
+            if (autoSave)
+            {
+                Save();
+            }
         }
 
         public static bool TryReplace(string json)
@@ -65,23 +77,21 @@ namespace ACore
         
         public static bool TryReplace(GameData newData)
         {
-            Debug.Log($"try replaced GameData, " +
-                      $"new data: {newData.Get<MetaStorage>().lastSave}, " +
-                      $"local data: {data.Get<MetaStorage>().lastSave}");
             if (newData.Get<MetaStorage>().lastSave > data.Get<MetaStorage>().lastSave)
             {
+                Debug.Log("[Storage] Successfully try replaced game data to local");
                 data = newData;
-                Debug.Log("Successfully try replaced GameData from server");
                 return true;
             }
 
+            Debug.Log("[Storage] Try replace failed: new game data is older or equal to local data");
             return false;
         }
 
         public static void Replace(string json)
         {
             data.SetJSON(json);
-            Debug.Log("Successfully replaced GameData from server");
+            Debug.Log("[Storage] Successfully replaced game data to local");
         }
     }
 }

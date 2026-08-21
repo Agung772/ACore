@@ -7,6 +7,7 @@ namespace ACore
     [CreateAssetMenu(menuName = "ACore/Setting", fileName = "ASetting")]
     public class ASettingData : ScriptableObjectAuto
     {
+        [TabGroup("General")] public bool autoSave = true;
         [TabGroup("General")] public string language;
         [TabGroup("General")] public FPSLimit FPS;
         

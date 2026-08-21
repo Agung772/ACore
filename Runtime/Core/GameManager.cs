@@ -90,8 +90,7 @@ namespace ACore
         {
             if (pauseStatus)
             {
-                // Auto Save
-                //STORAGE.Save();
+                STORAGE.TrySave();
             }
         }
 
