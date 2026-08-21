@@ -15,11 +15,19 @@ namespace ACore
 #endif
 
         private bool isAuthenticating;
+        private static bool googleConfigured;
 
         public override async Task PostInitializeAsync()
         {
-            try { await Setup(); }
-            catch (Exception _e) { Debug.LogError($"[Auth] Initialization failed: {_e.Message}"); }
+            try
+            {
+                await Setup();
+            }
+            catch (Exception _e)
+            {
+                Debug.LogError($"[Auth] Initialization failed: {_e.Message}");
+            }
+
             SCENE.OnLoaded += STORAGE.Save;
         }
 
@@ -52,6 +60,8 @@ namespace ACore
                 return;
             }
 
+            Debug.Log($"[Auth] Supabase session restore failed: {_result.Error}");
+
             _result = await LoginGoogleSilently();
 
             if (_result.IsSuccess)
@@ -59,6 +69,8 @@ namespace ACore
                 Debug.Log("[Auth] Google silent authentication completed.");
                 return;
             }
+
+            Debug.Log($"[Auth] Google silent authentication failed: {_result.Error}");
 
             _result = await LoginGoogle();
 
@@ -131,12 +143,18 @@ namespace ACore
 
                 if (_user == null)
                 {
-                    await SupabaseManager.Client.Auth.SignIn(editorEmail, editorPassword);
+                    await SupabaseManager.Client.Auth.SignIn(
+                        editorEmail,
+                        editorPassword
+                    );
+
                     _user = SupabaseManager.Client.Auth.CurrentUser;
                 }
 
                 if (_user == null)
-                    return new NetworkResult("Editor authentication succeeded but user is null.");
+                    return new NetworkResult(
+                        "Editor authentication succeeded but user is null."
+                    );
 
                 return await InitializeGameData();
             }
@@ -156,6 +174,11 @@ namespace ACore
         {
             try
             {
+                if (SupabaseManager.Client == null)
+                    return new NetworkResult(
+                        "Supabase client is not initialized."
+                    );
+
                 var _session = SupabaseManager.Client.Auth.CurrentSession;
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
@@ -178,6 +201,9 @@ namespace ACore
 
         private NetworkResult ConfigureGoogleSignIn()
         {
+            if (googleConfigured)
+                return new NetworkResult();
+
             var _settings = GAME.GetSO<ASettingData>();
 
             if (_settings == null)
@@ -191,26 +217,40 @@ namespace ACore
             if (string.IsNullOrWhiteSpace(_webClientId))
                 return new NetworkResult("Google Web Client ID is empty.");
 
-            GoogleSignIn.Configuration = new GoogleSignInConfiguration
+            try
             {
-                WebClientId = _webClientId,
-                RequestIdToken = true,
-                RequestEmail = true
-            };
+                GoogleSignIn.Configuration = new GoogleSignInConfiguration
+                {
+                    WebClientId = _webClientId,
+                    RequestIdToken = true,
+                    RequestEmail = true
+                };
 
-            return new NetworkResult();
+                googleConfigured = true;
+
+                return new NetworkResult();
+            }
+            catch (Exception _e)
+            {
+                HandleAuthException(_e);
+                return new NetworkResult(_e.Message);
+            }
         }
 
         private async Task<NetworkResult> LoginGoogleSilently()
         {
             if (SupabaseManager.Client == null)
-                return new NetworkResult("Supabase client is not initialized.");
+                return new NetworkResult(
+                    "Supabase client is not initialized."
+                );
 
             if (!await NETWORK.IsConnection().WithTimeout(10))
                 return new NetworkResult("No internet connection.");
 
             if (isAuthenticating)
-                return new NetworkResult("Authentication is already in progress.");
+                return new NetworkResult(
+                    "Authentication is already in progress."
+                );
 
             isAuthenticating = true;
 
@@ -225,22 +265,34 @@ namespace ACore
 
                 try
                 {
-                    _googleUser = await GoogleSignIn.DefaultInstance.SignInSilently();
+                    _googleUser =
+                        await GoogleSignIn.DefaultInstance.SignInSilently();
                 }
                 catch (Exception _e)
                 {
-                    return new NetworkResult($"Google silent sign-in failed: {_e.Message}");
+                    return new NetworkResult(
+                        $"Google silent sign-in failed: {_e.Message}"
+                    );
                 }
 
                 if (_googleUser == null)
-                    return new NetworkResult("Google silent sign-in returned null user.");
+                    return new NetworkResult(
+                        "Google silent sign-in returned null user."
+                    );
 
                 if (string.IsNullOrEmpty(_googleUser.IdToken))
-                    return new NetworkResult("Google silent sign-in returned an empty ID token.");
+                    return new NetworkResult(
+                        "Google silent sign-in returned an empty ID token."
+                    );
 
-                Debug.Log($"[Auth] Google silent sign-in succeeded: {_googleUser.Email}");
+                Debug.Log(
+                    $"[Auth] Google silent sign-in succeeded: {_googleUser.Email}"
+                );
 
-                return await LoginGoogleInternal(_googleUser.IdToken, false);
+                return await LoginGoogleInternal(
+                    _googleUser.IdToken,
+                    false
+                );
             }
             finally
             {
@@ -251,13 +303,17 @@ namespace ACore
         public async Task<NetworkResult> LoginGoogle()
         {
             if (SupabaseManager.Client == null)
-                return new NetworkResult("Supabase client is not initialized.");
+                return new NetworkResult(
+                    "Supabase client is not initialized."
+                );
 
             if (!await NETWORK.IsConnection().WithTimeout(10))
                 return new NetworkResult("No internet connection.");
 
             if (isAuthenticating)
-                return new NetworkResult("Authentication is already in progress.");
+                return new NetworkResult(
+                    "Authentication is already in progress."
+                );
 
             isAuthenticating = true;
 
@@ -268,22 +324,37 @@ namespace ACore
                 if (!_configurationResult.IsSuccess)
                     return _configurationResult;
 
-                var _googleUser = await GoogleSignIn.DefaultInstance.SignIn();
+                GoogleSignInUser _googleUser;
+
+                try
+                {
+                    _googleUser =
+                        await GoogleSignIn.DefaultInstance.SignIn();
+                }
+                catch (Exception _e)
+                {
+                    HandleAuthException(_e);
+                    return new NetworkResult(_e.Message);
+                }
 
                 if (_googleUser == null)
-                    return new NetworkResult("Google authentication returned a null user.");
+                    return new NetworkResult(
+                        "Google authentication returned a null user."
+                    );
 
                 if (string.IsNullOrEmpty(_googleUser.IdToken))
-                    return new NetworkResult("Google authentication returned an empty ID token.");
+                    return new NetworkResult(
+                        "Google authentication returned an empty ID token."
+                    );
 
-                Debug.Log($"[Auth] Google interactive sign-in succeeded: {_googleUser.Email}");
+                Debug.Log(
+                    $"[Auth] Google interactive sign-in succeeded: {_googleUser.Email}"
+                );
 
-                return await LoginGoogleInternal(_googleUser.IdToken, true);
-            }
-            catch (Exception _e)
-            {
-                HandleAuthException(_e);
-                return new NetworkResult(_e.Message);
+                return await LoginGoogleInternal(
+                    _googleUser.IdToken,
+                    true
+                );
             }
             finally
             {
@@ -291,10 +362,14 @@ namespace ACore
             }
         }
 
-        private async Task<NetworkResult> LoginGoogleInternal(string idToken, bool isInteractive)
+        private async Task<NetworkResult> LoginGoogleInternal(
+            string idToken,
+            bool isInteractive)
         {
             if (string.IsNullOrEmpty(idToken))
-                return new NetworkResult("Google ID token is empty.");
+                return new NetworkResult(
+                    "Google ID token is empty."
+                );
 
             try
             {
@@ -306,11 +381,17 @@ namespace ACore
                 var _user = SupabaseManager.Client.Auth.CurrentUser;
 
                 if (_user == null)
-                    return new NetworkResult("Google authentication succeeded but Supabase user is null.");
+                    return new NetworkResult(
+                        "Google authentication succeeded but Supabase user is null."
+                    );
 
-                Debug.Log($"[Auth] Supabase Google login succeeded: {_user.Id}");
+                Debug.Log(
+                    $"[Auth] Supabase Google login succeeded: {_user.Id}"
+                );
 
-                return isInteractive ? await InitializeFirstGameData() : await InitializeGameData();
+                return isInteractive
+                    ? await InitializeFirstGameData()
+                    : await InitializeGameData();
             }
             catch (Exception _e)
             {
@@ -322,19 +403,27 @@ namespace ACore
         public async Task<NetworkResult<bool>> Logout()
         {
             if (SupabaseManager.Client == null)
-                return new NetworkResult<bool>("Supabase client is not initialized.");
+                return new NetworkResult<bool>(
+                    "Supabase client is not initialized."
+                );
 
             if (!await NETWORK.IsConnection().WithTimeout(10))
-                return new NetworkResult<bool>("No internet connection.");
+                return new NetworkResult<bool>(
+                    "No internet connection."
+                );
 
             try
             {
                 await SupabaseManager.Client.Auth.SignOut();
+
                 return new NetworkResult<bool>(true);
             }
             catch (Exception _e)
             {
-                Debug.LogError($"[Auth] Sign out failed: {_e.Message}");
+                Debug.LogError(
+                    $"[Auth] Sign out failed: {_e.Message}"
+                );
+
                 return new NetworkResult<bool>(_e.Message);
             }
         }
@@ -343,7 +432,10 @@ namespace ACore
         {
             if (e == null)
             {
-                Debug.LogError("[Auth] Unknown authentication error.");
+                Debug.LogError(
+                    "[Auth] Unknown authentication error."
+                );
+
                 return;
             }
 
@@ -351,23 +443,43 @@ namespace ACore
 
             if (_message.Contains("over_email_send_rate_limit"))
             {
-                Debug.LogError("[Auth] Supabase email rate limit exceeded.");
+                Debug.LogError(
+                    "[Auth] Supabase email rate limit exceeded."
+                );
+
                 return;
             }
 
             if (_message.Contains("Invalid API key"))
             {
-                Debug.LogError("[Auth] Supabase API key is invalid.");
+                Debug.LogError(
+                    "[Auth] Supabase API key is invalid."
+                );
+
                 return;
             }
 
             if (_message.Contains("invalid_credentials"))
             {
-                Debug.LogError("[Auth] Editor authentication failed: invalid credentials.");
+                Debug.LogError(
+                    "[Auth] Editor authentication failed: invalid credentials."
+                );
+
                 return;
             }
 
-            Debug.LogError($"[Auth] Authentication error: {_message}");
+            if (_message.Contains("DefaultInstance already created"))
+            {
+                Debug.LogError(
+                    "[Auth] Google Sign-In DefaultInstance was already created."
+                );
+
+                return;
+            }
+
+            Debug.LogError(
+                $"[Auth] Authentication error: {_message}"
+            );
         }
     }
 }
