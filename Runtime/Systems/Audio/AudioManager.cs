@@ -11,10 +11,12 @@ namespace ACore
         {
             BGMSource = CreateSource("BGMSource");
             BGMSource.loop = true;
-            BGMSource.volume = BGMVolume;
+            BGMSource.volume = AUDIO.BGMVolume;
             
             SFXSource = CreateSource("SFXSource");
-            SFXSource.volume = SFXVolume;
+            SFXSource.volume = AUDIO.SFXVolume;
+            
+            AUDIO.Initialize();
         }
 
         private AudioSource CreateSource(string name)
@@ -22,26 +24,6 @@ namespace ACore
             var _source = new GameObject(name).AddComponent<AudioSource>();
             _source.transform.SetParent(GAME.Manager.transform);
             return _source;
-        }
-        
-        public float BGMVolume
-        {
-            get => PlayerPrefs.GetFloat("BGMVolume", 0.7f);
-            set
-            {
-                BGMSource.volume = value;
-                PlayerPrefs.SetFloat("BGMVolume", value);
-            }
-        }
-        
-        public float SFXVolume
-        {
-            get => PlayerPrefs.GetFloat("SFXVolume", 1);
-            set
-            {
-                SFXSource.volume = value;
-                PlayerPrefs.SetFloat("SFXVolume", value);
-            }
         }
     }
 }
