@@ -17,26 +17,47 @@ namespace ACore
             SceneManager.sceneUnloaded += _ => OnUnloaded?.Invoke();
         }
 
-        public static void RestratScene(Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
+        public static void Restart(LoadSceneSetting setting = null)
         {
-            LoadScene(GAME.CurrentScene, onProgress, removeAllPopup, onComplete);
+            Load(GAME.CurrentScene, setting);
         }
         
-        public static void LoadScene(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
+        public static void Load(string sceneName, LoadSceneSetting setting = null)
         {
-            GAME.Manager.StartCoroutine(LoadSceneCoroutine(sceneName, onProgress, removeAllPopup, onComplete));
+            GAME.Manager.StartCoroutine(LoadCoroutine(sceneName, setting));
         }
 
-        public static IEnumerator LoadSceneCoroutine(string sceneName, Action<float> onProgress = null, bool removeAllPopup = false, Action onComplete = null)
+        public static void LoadWithFade(string sceneName, LoadSceneSetting setting = null)
         {
-            OBJECT.RemoveOnLoaded(removeAllPopup);
+            if (setting == null) setting = new LoadSceneSetting();
+            
+            var _onComplete = setting.onComplete;
+            var _popup = OBJECT.Show<BlackscreenPopup>();
+            _popup.In(setting.fadeInInstant, () =>
+            {
+                setting.onComplete = () =>
+                {
+                    _popup.Out(setting.fadeOutInstant, () =>
+                    {
+                        _popup.Remove();
+                        _onComplete?.Invoke();
+                    });
+                };
+                Load(sceneName, setting);
+            });
+        }
+        
+        public static IEnumerator LoadCoroutine(string sceneName, LoadSceneSetting setting = null)
+        {
+            if (setting == null) setting = new LoadSceneSetting();
+            
+            OBJECT.RemoveOnLoaded(setting.removeAllPopup);
             var _async = SceneManager.LoadSceneAsync(sceneName);
 
             GAME.CurrentScene = sceneName;
-            while (_async.isDone)
+            while (!_async.isDone)
             {
-                var _progress = Mathf.Clamp01(_async.progress / 0.9f);
-                onProgress?.Invoke(_progress);
+                setting.onProgress?.Invoke(Mathf.Clamp01(_async.progress / 0.9f));
                 yield return null;
             }
 
@@ -44,8 +65,7 @@ namespace ACore
             _async.completed += _ => _isCompleted = true;
             yield return new WaitUntil(() => _isCompleted);
             
-            onComplete?.Invoke();
+            setting.onComplete?.Invoke();
         }
     }
 }
-

@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -14,9 +15,7 @@ namespace ACore.Animation
 
         private void Awake()
         {
-            canvasGroup = GetComponent<CanvasGroup>();
-            worldCanvasGroup = GetComponent<WorldCanvasGroup>();
-            
+            TryInitialize();
             ApplyValueInstant();
         }
 
@@ -26,12 +25,64 @@ namespace ACore.Animation
             ApplyValueInstant();
         }
 
+        private void TryInitialize()
+        {
+            if (canvasGroup == null || worldCanvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+                worldCanvasGroup = GetComponent<WorldCanvasGroup>();
+            }
+        }
+
         private void ApplyValueInstant()
         {
             if (!isFrom && !autoPlay) return;
             
             if (canvasGroup) canvasGroup.alpha = from;
             if (worldCanvasGroup) worldCanvasGroup.alpha = from;
+        }
+
+        public void Set(float fromValue, float toValue, bool instant = false, Action onComplete = null)
+        {
+            TryInitialize();
+            if (instant)
+            {
+                if (canvasGroup) canvasGroup.alpha = toValue;
+                if (worldCanvasGroup) worldCanvasGroup.alpha = toValue;
+            }
+            else
+            {
+                if (canvasGroup) canvasGroup.alpha = fromValue;
+                if (worldCanvasGroup) worldCanvasGroup.alpha = fromValue;
+                
+                Stop();
+                descr = Fade(GetFrom(), toValue);
+                descr.setOnComplete(onComplete);
+                base.Play();
+            }
+        }
+        public void Set(float value, bool instant = false, Action onComplete = null)
+        {
+            TryInitialize();
+            if (instant)
+            {
+                if (canvasGroup) canvasGroup.alpha = value;
+                if (worldCanvasGroup) worldCanvasGroup.alpha = value;
+            }
+            else
+            {
+                Stop();
+                descr = Fade(GetFrom(), value);
+                descr.setOnComplete(onComplete);
+                base.Play();
+            }
+        }
+
+        public float Get()
+        {
+            if (canvasGroup) return canvasGroup.alpha;
+            if (worldCanvasGroup) return worldCanvasGroup.alpha;
+            return 0;
         }
 
         public override void Play()

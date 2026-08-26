@@ -75,7 +75,7 @@ namespace ACore
             {
                 var _scenePath = SceneUtility.GetScenePathByBuildIndex(1);
                 var _sceneName = Path.GetFileNameWithoutExtension(_scenePath);
-                yield return SCENE.LoadSceneCoroutine(_sceneName);
+                yield return SCENE.LoadCoroutine(_sceneName);
             }
 
             if (_popup != null)
