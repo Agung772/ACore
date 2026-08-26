@@ -8,9 +8,9 @@ namespace ACore
     {
         [SerializeField] private ValueThis fade;
 
-        public void Fade(bool isIn, bool instant = false, Action onComplete = null)
+        public void Fade(FadeType type, bool instant = false, Action onComplete = null)
         {
-            if (isIn) In(instant, onComplete);
+            if (type == FadeType.In) In(instant, onComplete);
             else Out(instant, onComplete);
         }
 
