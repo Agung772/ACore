@@ -16,16 +16,16 @@ namespace ACore
 
         public void In(bool instant = false, Action onComplete = null)
         {
-            fade.Set(0, 1, instant, onComplete);
             fade.onComplete.RemoveAllListeners();
             fade.onComplete.AddListener(() => onComplete?.Invoke());
+            fade.Set(0, 1, instant, onComplete);
         }
     
         public void Out(bool instant, Action onComplete = null)
         {
-            fade.Set(0, 1, instant, onComplete);
             fade.onComplete.RemoveAllListeners();
             fade.onComplete.AddListener(() => onComplete?.Invoke());
+            fade.Set(0, 1, instant, onComplete);
         }
     }
 }
