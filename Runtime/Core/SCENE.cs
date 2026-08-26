@@ -21,13 +21,35 @@ namespace ACore
         {
             Load(GAME.CurrentScene, setting);
         }
+
+        public static void Load(string sceneName)
+        {
+            var _setting = new LoadSceneSetting();
+            Load(sceneName, _setting);
+        }
+        public static void Load(string sceneName, Action onComplete)
+        {
+            var _setting = new LoadSceneSetting { onComplete = onComplete };
+            Load(sceneName, _setting);
+        }
         
-        public static void Load(string sceneName, LoadSceneSetting setting = null)
+        public static void Load(string sceneName, LoadSceneSetting setting)
         {
             GAME.Manager.StartCoroutine(LoadCoroutine(sceneName, setting));
         }
+        
+        public static void LoadWithFade(string sceneName)
+        {
+            var _setting = new LoadSceneSetting();
+            LoadWithFade(sceneName, _setting);
+        }
+        public static void LoadWithFade(string sceneName, Action onComplete)
+        {
+            var _setting = new LoadSceneSetting { onComplete = onComplete };
+            LoadWithFade(sceneName, _setting);
+        }
 
-        public static void LoadWithFade(string sceneName, LoadSceneSetting setting = null)
+        public static void LoadWithFade(string sceneName, LoadSceneSetting setting)
         {
             if (setting == null) setting = new LoadSceneSetting();
             
@@ -47,7 +69,18 @@ namespace ACore
             });
         }
         
-        public static IEnumerator LoadCoroutine(string sceneName, LoadSceneSetting setting = null)
+        public static IEnumerator LoadCoroutine(string sceneName)
+        {
+            var _setting = new LoadSceneSetting();
+            yield return LoadCoroutine(sceneName, _setting);
+        }
+        public static IEnumerator LoadCoroutine(string sceneName, Action onComplete)
+        {
+            var _setting = new LoadSceneSetting { onComplete = onComplete };
+            yield return LoadCoroutine(sceneName, _setting);
+        }
+        
+        public static IEnumerator LoadCoroutine(string sceneName, LoadSceneSetting setting)
         {
             if (setting == null) setting = new LoadSceneSetting();
             
