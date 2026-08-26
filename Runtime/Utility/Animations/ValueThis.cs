@@ -56,8 +56,8 @@ namespace ACore.Animation
                 if (worldCanvasGroup) worldCanvasGroup.alpha = fromValue;
                 
                 Stop();
+                this.onComplete.AddListener(() => onComplete?.Invoke());
                 descr = Fade(GetFrom(), toValue);
-                descr.setOnComplete(onComplete);
                 base.Play();
             }
         }
