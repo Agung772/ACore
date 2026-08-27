@@ -49,6 +49,7 @@ namespace ACore.Animation
             {
                 if (canvasGroup) canvasGroup.alpha = toValue;
                 if (worldCanvasGroup) worldCanvasGroup.alpha = toValue;
+                onComplete?.Invoke();
             }
             else
             {
@@ -56,11 +57,13 @@ namespace ACore.Animation
                 if (worldCanvasGroup) worldCanvasGroup.alpha = fromValue;
                 
                 Stop();
+                this.onComplete.RemoveAllListeners();
                 this.onComplete.AddListener(() => onComplete?.Invoke());
                 descr = Fade(GetFrom(), toValue);
                 base.Play();
             }
         }
+
         public void Set(float value, bool instant = false, Action onComplete = null)
         {
             TryInitialize();
@@ -68,10 +71,12 @@ namespace ACore.Animation
             {
                 if (canvasGroup) canvasGroup.alpha = value;
                 if (worldCanvasGroup) worldCanvasGroup.alpha = value;
+                onComplete?.Invoke();
             }
             else
             {
                 Stop();
+                this.onComplete.RemoveAllListeners();
                 descr = Fade(GetFrom(), value);
                 descr.setOnComplete(onComplete);
                 base.Play();

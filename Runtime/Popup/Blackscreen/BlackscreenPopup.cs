@@ -19,9 +19,9 @@ namespace ACore
             fade.Set(0, 1, instant, onComplete);
         }
     
-        public void Out(bool instant, Action onComplete = null)
+        public void Out(bool instant = false, Action onComplete = null)
         {
-            fade.Set(0, 1, instant, onComplete);
+            fade.Set(1, 0, instant, onComplete);
         }
     }
 }
