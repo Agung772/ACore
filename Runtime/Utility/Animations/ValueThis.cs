@@ -36,6 +36,7 @@ namespace ACore.Animation
         private void ApplyValueInstant()
         {
             if (!isFrom && !autoPlay) return;
+            if (!autoPlay) return;
             
             if (canvasGroup) canvasGroup.alpha = from;
             if (worldCanvasGroup) worldCanvasGroup.alpha = from;
@@ -97,9 +98,9 @@ namespace ACore.Animation
             Stop();
             if (instant)
             {
-                float target = isFrom ? from : GetFrom();
-                if (canvasGroup) canvasGroup.alpha = target;
-                if (worldCanvasGroup) worldCanvasGroup.alpha = target;
+                var _target = GetFrom();
+                if (canvasGroup) canvasGroup.alpha = _target;
+                if (worldCanvasGroup) worldCanvasGroup.alpha = _target;
                 base.ToDefault(true, onComplete);
             }
             else
