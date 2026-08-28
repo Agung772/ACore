@@ -27,11 +27,10 @@ namespace ACore.Animation
 
         private void TryInitialize()
         {
-            if (canvasGroup == null || worldCanvasGroup == null)
-            {
+            if (canvasGroup == null)
                 canvasGroup = GetComponent<CanvasGroup>();
+            if (worldCanvasGroup == null)
                 worldCanvasGroup = GetComponent<WorldCanvasGroup>();
-            }
         }
 
         private void ApplyValueInstant()
@@ -49,7 +48,7 @@ namespace ACore.Animation
             {
                 if (canvasGroup) canvasGroup.alpha = toValue;
                 if (worldCanvasGroup) worldCanvasGroup.alpha = toValue;
-                onComplete?.Invoke();
+                Complete(onComplete);
             }
             else
             {
@@ -57,10 +56,8 @@ namespace ACore.Animation
                 if (worldCanvasGroup) worldCanvasGroup.alpha = fromValue;
                 
                 Stop();
-                this.onComplete.RemoveAllListeners();
-                this.onComplete.AddListener(() => onComplete?.Invoke());
-                descr = Fade(GetFrom(), toValue);
-                base.Play();
+                descr = Fade(fromValue, toValue);
+                base.Play(onComplete);
             }
         }
 
@@ -71,15 +68,13 @@ namespace ACore.Animation
             {
                 if (canvasGroup) canvasGroup.alpha = value;
                 if (worldCanvasGroup) worldCanvasGroup.alpha = value;
-                onComplete?.Invoke();
+                Complete(onComplete);
             }
             else
             {
                 Stop();
-                this.onComplete.RemoveAllListeners();
                 descr = Fade(GetFrom(), value);
-                descr.setOnComplete(onComplete);
-                base.Play();
+                base.Play(onComplete);
             }
         }
 
@@ -90,18 +85,28 @@ namespace ACore.Animation
             return 0;
         }
 
-        public override void Play()
+        public override void Play(Action onComplete = null)
         {
             Stop();
             descr = Fade(GetFrom(), to);
-            base.Play();
+            base.Play(onComplete);
         }
 
-        public override void ToDefault(bool fasted = false)
+        public override void ToDefault(bool instant = false, Action onComplete = null)
         {
             Stop();
-            descr = Fade(to, GetFrom());
-            base.ToDefault(fasted);
+            if (instant)
+            {
+                float target = isFrom ? from : GetFrom();
+                if (canvasGroup) canvasGroup.alpha = target;
+                if (worldCanvasGroup) worldCanvasGroup.alpha = target;
+                base.ToDefault(true, onComplete);
+            }
+            else
+            {
+                descr = Fade(to, GetFrom());
+                base.ToDefault(false, onComplete);
+            }
         }
 
         private LTDescr Fade(float fromValue, float toValue)

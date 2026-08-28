@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace ACore
         
         private SpriteRenderer spriteRenderer;
         private Image image;
+        private Coroutine playCoroutine;
 
         private void Awake()
         {
@@ -33,37 +35,45 @@ namespace ACore
 
         private void OnDisable()
         {
-            gameObject.StopCoroutine();
+            Stop();
         }
 
-        public void Play()
+        public void Play(Action onComplete = null)
         {
+            Stop();
             if (isLoop)
             {
-                gameObject.StartCoroutineLoop(PlayCoroutine);
+                playCoroutine = StartCoroutine(PlayCoroutine(null));
             }
             else
             {
-                gameObject.StartCoroutine(PlayCoroutine);
+                playCoroutine = StartCoroutine(PlayCoroutine(onComplete));
             }
         }
 
         public void Stop()
         {
-            gameObject.StopCoroutine();
+            if (playCoroutine != null)
+            {
+                StopCoroutine(playCoroutine);
+                playCoroutine = null;
+            }
         }
 
-        private IEnumerator PlayCoroutine()
+        private IEnumerator PlayCoroutine(Action onComplete)
         {
+            if (sprites == null || sprites.Length == 0) yield break;
+
             foreach (var _sprite in sprites)
             {
                 if (spriteRenderer) spriteRenderer.sprite = _sprite;
                 else if (image) image.sprite = _sprite;
-                yield return new WaitForSeconds(1 / fps);
+                yield return new WaitForSeconds(1f / Mathf.Max(fps, 0.01f));
             }
 
             if (!isLoop)
             {
+                this.onComplete?.Invoke();
                 onComplete?.Invoke();
             }
         }

@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -98,7 +99,7 @@ namespace ACore.Animation
             meshTransparentPrepared = true;
         }
 
-        public override void Play()
+        public override void Play(Action onComplete = null)
         {
             Stop();
 
@@ -126,19 +127,23 @@ namespace ACore.Animation
                     });
             }
 
-            base.Play();
+            base.Play(onComplete);
         }
 
-        public override void ToDefault(bool fasted = false)
+        public override void ToDefault(bool instant = false, Action onComplete = null)
         {
             Stop();
 
             if (!isFrom)
+            {
+                onComplete?.Invoke();
                 return;
+            }
 
-            if (fasted)
+            if (instant)
             {
                 ApplyColorInstant(from);
+                base.ToDefault(true, onComplete);
             }
             else
             {
@@ -161,9 +166,9 @@ namespace ACore.Animation
                                 SetMaterialColor(_mat, c);
                         });
                 }
-            }
 
-            base.ToDefault(fasted);
+                base.ToDefault(false, onComplete);
+            }
         }
     }
 }

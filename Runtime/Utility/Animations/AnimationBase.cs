@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,7 +14,7 @@ namespace ACore.Animation
         [SerializeField, ShowIf(nameof(isLoop))] protected int loopCount = -1;
         [SerializeField, ShowIf(nameof(isLoop))] protected LeanTweenType loopType = LeanTweenType.clamp;
         
-        [PropertyOrder(100)] public UnityEvent onComplete;
+        [PropertyOrder(100)] private UnityEvent onComplete;
         
         protected LTDescr descr;
         
@@ -30,8 +31,10 @@ namespace ACore.Animation
             Stop();
         }
 
-        public virtual void Play()
+        public virtual void Play(Action onComplete = null)
         {
+            if (descr == null) return;
+
             if (isLoop)
             {
                 switch (loopType)
@@ -49,11 +52,13 @@ namespace ACore.Animation
                         descr.setLoopCount(loopCount);
                         break;
                 }
- 
             }
             
             descr.setIgnoreTimeScale(useUnScaledTime);
-            descr.setOnComplete(() => onComplete?.Invoke());
+            descr.setOnComplete(() =>
+            {
+                Complete(onComplete);
+            });
         }
         
         public virtual void Stop()
@@ -65,10 +70,25 @@ namespace ACore.Animation
             descr = null;
         }
 
-        public virtual void ToDefault(bool fasted = false)
+        public virtual void ToDefault(bool instant = false, Action onComplete = null)
         {
+            if (instant || descr == null)
+            {
+                Complete(onComplete);
+                return;
+            }
+
             descr.setIgnoreTimeScale(useUnScaledTime);
-            descr.setOnComplete(() => onComplete?.Invoke());
+            descr.setOnComplete(() =>
+            {
+                Complete(onComplete);
+            });
+        }
+
+        public void Complete(Action onOtherComplete)
+        {
+            onComplete?.Invoke();
+            onOtherComplete?.Invoke();
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -18,7 +19,8 @@ namespace ACore.Animation
                 transform.eulerAngles = from;
             }
         }
-        public override void Play()
+
+        public override void Play(Action onComplete = null)
         {
             base.Stop();
             if (isFrom && base.autoPlay)
@@ -26,24 +28,30 @@ namespace ACore.Animation
                 transform.eulerAngles = from;
             }
             base.descr = gameObject.LeanRotateAroundLocal(to, add, time);
-            base.Play();
+            base.Play(onComplete);
         }
         
-        public override void ToDefault(bool fasted = false)
+        public override void ToDefault(bool instant = false, Action onComplete = null)
         {
             if (!isFrom)
             {
                 Debug.LogWarning("To Default not available because it is not from.");
+                onComplete?.Invoke();
                 return;
             }
             
             base.Stop();
             
-            if (fasted) transform.eulerAngles = from;
-            else base.descr = gameObject.LeanRotateAroundLocal(from, add, time);
-            
-            base.ToDefault(fasted);
+            if (instant)
+            {
+                transform.eulerAngles = from;
+                base.ToDefault(true, onComplete);
+            }
+            else
+            {
+                base.descr = gameObject.LeanRotateAroundLocal(from, add, time);
+                base.ToDefault(false, onComplete);
+            }
         }
     }
 }
-

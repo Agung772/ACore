@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace ACore.Animation
@@ -12,23 +13,29 @@ namespace ACore.Animation
         {
             if (autoPlay && startDelay > 0)
             {
-                base.descr = gameObject.LeanDelayedCall(startDelay, Play);
+                base.descr = gameObject.LeanDelayedCall(startDelay, () => Play());
                 return;
             }
             
             base.OnEnable();
         }
 
-        public override void Play()
+        public override void Play(Action onComplete = null)
         {
-            base.descr.setEase(type);
-            base.Play();
+            if (descr != null)
+            {
+                descr.setEase(type);
+            }
+            base.Play(onComplete);
         }
 
-        public override void ToDefault(bool fasted = false)
+        public override void ToDefault(bool instant = false, Action onComplete = null)
         {
-            base.ToDefault(fasted);
-            if (!fasted) base.descr.setEase(type);
+            if (!instant && descr != null)
+            {
+                descr.setEase(type);
+            }
+            base.ToDefault(instant, onComplete);
         }
     }
 }

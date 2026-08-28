@@ -1,3 +1,4 @@
+using System;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -17,7 +18,7 @@ namespace ACore.Animation
             }
         }
         
-        public override void Play()
+        public override void Play(Action onComplete = null)
         {
             base.Stop();
             if (isFrom && base.autoPlay)
@@ -26,23 +27,30 @@ namespace ACore.Animation
             }
 
             base.descr = gameObject.LeanScale(to, time);
-            base.Play();
+            base.Play(onComplete);
         }
         
-        public override void ToDefault(bool fasted = false)
+        public override void ToDefault(bool instant = false, Action onComplete = null)
         {
             if (!isFrom)
             {
                 Debug.LogWarning("To Default not available because it is not from.");
+                onComplete?.Invoke();
                 return;
             }
             
             base.Stop();
             
-            if (fasted) transform.localScale = from;
-            else base.descr = gameObject.LeanScale(from, time);
-            
-            base.ToDefault(fasted);
+            if (instant)
+            {
+                transform.localScale = from;
+                base.ToDefault(true, onComplete);
+            }
+            else
+            {
+                base.descr = gameObject.LeanScale(from, time);
+                base.ToDefault(false, onComplete);
+            }
         }
     }
 }

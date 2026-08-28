@@ -8,17 +8,23 @@ namespace ACore.Animation
     {
         public AnimationBase[] animations;
 
-        public void Play()
+        public void Play(Action onComplete = null)
         {
-            foreach (var _animation in animations)
+            if (animations == null) return;
+            for (int i = 0; i < animations.Length; i++)
             {
-                if (_animation == null) continue;
-                _animation.Play();
+                var anim = animations[i];
+                if (anim == null) continue;
+                if (i == animations.Length - 1)
+                    anim.Play(onComplete);
+                else
+                    anim.Play();
             }
         }
         
         public void Stop()
         {
+            if (animations == null) return;
             foreach (var _animation in animations)
             {
                 if (_animation == null) continue;
@@ -26,12 +32,17 @@ namespace ACore.Animation
             }
         }        
         
-        public void ToDefault()
+        public void ToDefault(bool instant = false, Action onComplete = null)
         {
-            foreach (var _animation in animations)
+            if (animations == null) return;
+            for (int i = 0; i < animations.Length; i++)
             {
-                if (_animation == null) continue;
-                _animation.ToDefault();
+                var anim = animations[i];
+                if (anim == null) continue;
+                if (i == animations.Length - 1)
+                    anim.ToDefault(instant, onComplete);
+                else
+                    anim.ToDefault(instant);
             }
         }
     }
