@@ -21,6 +21,7 @@ namespace ACore
     
         public void Out(bool instant = false, Action onComplete = null)
         {
+            onComplete += Remove;
             fade.Set(1, 0, instant, onComplete);
         }
     }
