@@ -8,6 +8,8 @@ namespace ACore
     {
         public static void StartCoroutine(this GameObject key, string id, float startDelay, Action callBack)
         {
+            if (key == null || string.IsNullOrEmpty(id) || callBack == null || GAME.Manager == null) return;
+
             Coroutine _handle = null;
 
             IEnumerator Wrapper()

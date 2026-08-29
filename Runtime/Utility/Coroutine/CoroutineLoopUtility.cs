@@ -8,12 +8,14 @@ namespace ACore
     {
         public static void StartCoroutineLoop(this GameObject key, Func<IEnumerator> routineFunc)
         {
+            if (key == null || routineFunc == null || GAME.Manager == null) return;
             var _coroutine = ExecuteCoroutine(key, LoopCoroutine(key, routineFunc));
             TryAddCoroutine(key, _coroutine);
         }
 
         public static void StartCoroutineLoop(this GameObject key, float startDelay, Func<IEnumerator> routineFunc)
         {
+            if (key == null || routineFunc == null || GAME.Manager == null) return;
             var _coroutine = ExecuteCoroutine(key, StartCoroutineDelayed(startDelay, LoopCoroutine(key, routineFunc)));
             TryAddCoroutine(key, _coroutine);
         }
@@ -24,7 +26,6 @@ namespace ACore
             {
                 if (key == null)
                 {
-                    Coroutines.Remove(key);
                     yield break;
                 }
 

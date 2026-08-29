@@ -8,19 +8,30 @@ namespace ACore
     {
         public static void StartCoroutine(this GameObject key, float startDelay, Action callBack)
         {
-            var _coroutine = ExecuteCoroutine(key, CallBackCoroutine(key, startDelay, callBack)); 
-            TryAddCoroutine(key, _coroutine);
+            if (key == null || callBack == null || GAME.Manager == null) return;
+
+            Coroutine _handle = null;
+
+            IEnumerator Wrapper()
+            {
+                yield return CallBackCoroutine(key, startDelay, callBack, _handle);
+            }
+
+            _handle = GAME.Manager.StartCoroutine(Wrapper());
+            TryAddCoroutine(key, _handle);
         }
-        private static IEnumerator CallBackCoroutine(GameObject key, float startDelay, Action callBack)
+
+        private static IEnumerator CallBackCoroutine(GameObject key, float startDelay, Action callBack, Coroutine handle)
         {
             yield return new WaitForSeconds(startDelay);
             if (key == null)
             {
-                Coroutines.Remove(key);
+                RemoveCoroutine(key, handle);
                 yield break;
             }
             
             callBack?.Invoke();
+            RemoveCoroutine(key, handle);
         }
     }
 }

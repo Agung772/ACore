@@ -11,6 +11,7 @@ namespace ACore
 
         private static void TryAddCoroutine(GameObject key, Coroutine routine)
         {
+            if (key == null || routine == null) return;
             if (!Coroutines.ContainsKey(key))
             {
                 Coroutines[key] = new List<Coroutine>();
@@ -20,6 +21,7 @@ namespace ACore
 
         private static void RemoveCoroutine(GameObject key, Coroutine routine)
         {
+            if (key == null || routine == null) return;
             if (!Coroutines.TryGetValue(key, out var _list)) return;
             _list.Remove(routine);
             if (_list.Count == 0) Coroutines.Remove(key);
@@ -27,6 +29,8 @@ namespace ACore
 
         private static Coroutine ExecuteCoroutine(GameObject key, IEnumerator routine)
         {
+            if (key == null || routine == null || GAME.Manager == null) return null;
+
             Coroutine _coroutineHandle = null;
 
             IEnumerator Wrapper()
@@ -41,12 +45,14 @@ namespace ACore
 
         public static void StartCoroutine(this GameObject key, Func<IEnumerator> routineFunc)
         {
+            if (key == null || routineFunc == null || GAME.Manager == null) return;
             var _coroutine = ExecuteCoroutine(key, routineFunc.Invoke());
             TryAddCoroutine(key, _coroutine);
         }
 
         public static void StartCoroutine(this GameObject key, float startDelay, Func<IEnumerator> routineFunc)
         {
+            if (key == null || routineFunc == null || GAME.Manager == null) return;
             var _coroutine = ExecuteCoroutine(key, StartCoroutineDelayed(startDelay, routineFunc.Invoke()));
             TryAddCoroutine(key, _coroutine);
         }
@@ -59,11 +65,12 @@ namespace ACore
 
         public static void StopCoroutine(this GameObject key)
         {
-            if (GAME.Manager == null) return;
+            if (key == null || GAME.Manager == null) return;
 
             if (Coroutines.TryGetValue(key, out var _routines))
             {
-                foreach (var _routine in _routines)
+                var _toStop = new List<Coroutine>(_routines);
+                foreach (var _routine in _toStop)
                 {
                     if (_routine != null)
                     {
@@ -75,12 +82,14 @@ namespace ACore
 
             if (CoroutinesWithID.TryGetValue(key, out var _dict))
             {
-                foreach (var _kvp in _dict)
+                var _kvpList = new List<KeyValuePair<string, List<Coroutine>>>(_dict);
+                foreach (var _kvp in _kvpList)
                 {
                     var _list = _kvp.Value;
                     if (_list == null) continue;
 
-                    foreach (var _coroutine in _list)
+                    var _toStop = new List<Coroutine>(_list);
+                    foreach (var _coroutine in _toStop)
                     {
                         if (_coroutine != null)
                         {
@@ -95,7 +104,8 @@ namespace ACore
         
         public static bool IsCoroutine(this GameObject key)
         {
-            return Coroutines.ContainsKey(key);
+            if (key == null) return false;
+            return Coroutines.ContainsKey(key) || CoroutinesWithID.ContainsKey(key);
         }
     }
 }
