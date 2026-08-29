@@ -1,11 +1,14 @@
+using System.Collections;
+using System.IO;
 using ACore.Google;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ACore
 {
     [CreateAssetMenu(menuName = "ACore/Setting", fileName = "ASetting")]
-    public class ASettingData : ScriptableObjectAuto
+    public class ASetting : ScriptableObjectAuto
     {
         [TabGroup("General")] public bool autoSave = true;
         [TabGroup("General")] public string language;
@@ -18,5 +21,15 @@ namespace ACore
         [TabGroup("Supabase")] public bool isSupabase;
         [TabGroup("Supabase"), ShowIf(nameof(isSupabase)), HideLabel] 
         public SupabaseSetting supabase;
+
+        public virtual IEnumerator FirstScene()
+        {
+            if (SceneManager.GetActiveScene().buildIndex == 0)
+            {
+                var _scenePath = SceneUtility.GetScenePathByBuildIndex(1);
+                var _sceneName = Path.GetFileNameWithoutExtension(_scenePath);
+                yield return SCENE.LoadCoroutine(_sceneName);
+            }
+        }
     }
 }

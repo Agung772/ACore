@@ -17,7 +17,7 @@ namespace ACore.Google
 
         public override IEnumerator InitializeCoroutine()
         {
-            if (!GAME.GetSO<ASettingData>().isGooglePlay) yield break;
+            if (!GAME.GetSO<ASetting>().isGooglePlay) yield break;
             PlayGamesPlatform.Activate();
             
             var _isCompleted = false;

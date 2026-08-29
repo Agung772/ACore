@@ -16,7 +16,7 @@ namespace ACore
         public static void Initialize()
         {
             Load();
-            if (GAME.TryGetSO<ASettingData>(out var _so))
+            if (GAME.TryGetSO<ASetting>(out var _so))
             {
                 autoSave = _so.autoSave;
             }

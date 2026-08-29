@@ -13,7 +13,7 @@ namespace ACore.Google
 
         public override void Initialize()
         {
-            var _setting = GAME.GetSO<ASettingData>().googlePlay;
+            var _setting = GAME.GetSO<ASetting>().googlePlay;
             if (_setting.noBanner) return;
             
             Request(checkConnection: false);
@@ -61,7 +61,7 @@ namespace ACore.Google
             
             if (!checkConnection || await NETWORK.IsConnection())
             {
-                var _setting = GAME.GetSO<ASettingData>().googlePlay;
+                var _setting = GAME.GetSO<ASetting>().googlePlay;
                 data = new BannerView(_setting.bannerID, AdSize.Banner, AdPosition.Top);
                 data.OnBannerAdLoaded += BannerAdLoaded;
             

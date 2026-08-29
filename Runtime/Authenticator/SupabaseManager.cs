@@ -14,7 +14,17 @@ namespace ACore
 
         public override async Task InitializeAsync()
         {
-            await Setup().WithTimeout(5);
+            try
+            {
+                var _result = await Setup().WithTimeout(5);
+                if (!_result.IsSuccess)
+                    Debug.LogError($"[Supabase] Setup failed: {_result.Error}");
+            }
+            catch (Exception _e)
+            {
+                Client = null;
+                Debug.LogError($"[Supabase] Initialization timed out or failed: {_e.Message}");
+            }
         }
 
         private async Task<NetworkResult> Setup()
@@ -23,7 +33,7 @@ namespace ACore
             {
                 Debug.Log("[Supabase] Initializing...");
 
-                var _setting = GAME.GetSO<ASettingData>()?.supabase;
+                var _setting = GAME.GetSO<ASetting>()?.supabase;
 
                 if (_setting == null)
                     return new NetworkResult("Supabase settings are null.");

@@ -33,8 +33,16 @@ namespace ACore
         {
             Debug.Log("[Auth] Initializing...");
 
+            var _waitStart = DateTime.UtcNow;
             while (SupabaseManager.Client == null)
+            {
+                if ((DateTime.UtcNow - _waitStart).TotalSeconds > 30)
+                {
+                    Debug.LogError("[Auth] Supabase client initialization timed out.");
+                    return;
+                }
                 await Task.Delay(100);
+            }
 
             if (!await NETWORK.IsConnection().WithTimeout(10))
             {
@@ -200,7 +208,7 @@ namespace ACore
             if (googleConfigured)
                 return new NetworkResult();
 
-            var _settings = GAME.GetSO<ASettingData>();
+            var _settings = GAME.GetSO<ASetting>();
 
             if (_settings == null)
                 return new NetworkResult("ASettingData is null.");
@@ -379,6 +387,17 @@ namespace ACore
             try
             {
                 await SupabaseManager.Client.Auth.SignOut();
+
+                if (googleConfigured)
+                {
+                    try
+                    {
+                        GoogleSignIn.DefaultInstance.SignOut();
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
 
                 return new NetworkResult<bool>(true);
             }

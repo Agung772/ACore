@@ -42,9 +42,15 @@ namespace ACore
         public override void OnLoad()
         {
             base.OnLoad();
-            GAME.Manager.OnUpdate1s += () => AddPlayTime(1);
+            GAME.Manager.OnUpdate1s -= OnPlayTimeTick;
+            GAME.Manager.OnUpdate1s += OnPlayTimeTick;
             RefreshMetadata();
             Login();
+        }
+
+        private void OnPlayTimeTick()
+        {
+            AddPlayTime(1);
         }
         
         private void RefreshMetadata()

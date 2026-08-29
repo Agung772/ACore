@@ -70,13 +70,9 @@ namespace ACore
                 yield return GAME.Initialize(_popup.Setup);
             else
                 yield return GAME.Initialize();
-            
-            if (SceneManager.GetActiveScene().buildIndex == 0)
-            {
-                var _scenePath = SceneUtility.GetScenePathByBuildIndex(1);
-                var _sceneName = Path.GetFileNameWithoutExtension(_scenePath);
-                yield return SCENE.LoadCoroutine(_sceneName);
-            }
+
+            var _setting = GAME.GetSO<ASetting>();
+            yield return _setting.FirstScene();
 
             if (_popup != null)
             {

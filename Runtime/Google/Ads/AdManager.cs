@@ -15,7 +15,7 @@ namespace ACore.Google
         
         public override IEnumerator InitializeCoroutine()
         {
-            var _setting = GAME.GetSO<ASettingData>();
+            var _setting = GAME.GetSO<ASetting>();
             if (!_setting.isGooglePlay) yield break;
             if (_setting.googlePlay.noAds) yield break;
             
