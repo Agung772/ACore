@@ -10,16 +10,16 @@ namespace ACore
     [CreateAssetMenu(menuName = "ACore/Setting", fileName = "ASetting")]
     public class ASetting : ScriptableObjectAuto
     {
-        [TabGroup("General")] public bool autoSave = true;
-        [TabGroup("General")] public string language;
-        [TabGroup("General")] public FPSLimit FPS;
+        [TabGroup("ACore","General")] public bool autoSave = true;
+        [TabGroup("ACore","General")] public string language;
+        [TabGroup("ACore","General")] public FPSLimit FPS;
         
-        [TabGroup("Google Play")] public bool isGooglePlay;
-        [TabGroup("Google Play"), ShowIf(nameof(isGooglePlay)), HideLabel] 
+        [TabGroup("ACore","Google Play")] public bool isGooglePlay;
+        [TabGroup("ACore","Google Play"), ShowIf(nameof(isGooglePlay)), HideLabel] 
         public GooglePlaySetting googlePlay;
         
-        [TabGroup("Supabase")] public bool isSupabase;
-        [TabGroup("Supabase"), ShowIf(nameof(isSupabase)), HideLabel] 
+        [TabGroup("ACore","Supabase")] public bool isSupabase;
+        [TabGroup("ACore","Supabase"), ShowIf(nameof(isSupabase)), HideLabel] 
         public SupabaseSetting supabase;
 
         public virtual IEnumerator FirstScene()
