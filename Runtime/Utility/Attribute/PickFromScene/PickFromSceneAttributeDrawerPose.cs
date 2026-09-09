@@ -21,7 +21,7 @@ namespace ACore.Tool
         private bool hideIfCondition;
         private bool showHandles = false;
         private float lastDrawnTime;
-        private const float HideTimeout = 0.2f;
+        private const float HideTimeout = 0.25f;
 
         protected override void Initialize()
         {
@@ -63,12 +63,10 @@ namespace ACore.Tool
 
             if (!showHandles) return;
 
-            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout)
-            {
-                showHandles = false;
-                return;
-            }
+            if (GUIUtility.hotControl != 0)
+                lastDrawnTime = Time.realtimeSinceStartup;
 
+            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
             if (!IsVisibleInInspector()) return;
 
             var _pose = ValueEntry.SmartValue;
@@ -87,6 +85,8 @@ namespace ACore.Tool
 
             if (EditorGUI.EndChangeCheck())
             {
+                lastDrawnTime = Time.realtimeSinceStartup;
+
                 _pose.position = _position;
                 _pose.rotation = _rotation;
 
@@ -146,6 +146,7 @@ namespace ACore.Tool
             if (SirenixEditorGUI.IconButton(showHandles ? EditorIcons.Checkmark : EditorIcons.X, buttonStyle))
             {
                 showHandles = !showHandles;
+                lastDrawnTime = Time.realtimeSinceStartup;
                 SceneView.RepaintAll();
             }
 
@@ -255,6 +256,8 @@ namespace ACore.Tool
             ValueEntry.SmartValue = _pose;
 
             current = _pose;
+
+            lastDrawnTime = Time.realtimeSinceStartup;
 
             SceneView.RepaintAll();
 
