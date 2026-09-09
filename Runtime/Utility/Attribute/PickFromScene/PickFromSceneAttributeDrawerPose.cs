@@ -21,7 +21,7 @@ namespace ACore.Tool
         private bool hideIfCondition;
         private bool showHandles = true;
         private float lastDrawnTime;
-        private const float HideTimeout = 2.0f; // longer timeout so it still works in cutscene graph / custom editors
+        private const float HideTimeout = 2.0f;
 
         protected override void Initialize()
         {
@@ -45,8 +45,11 @@ namespace ACore.Tool
             {
                 if (Property == null) return;
                 if (Property.Tree == null) return;
-                if (Property.Tree.UnitySerializedObject == null) return;
-                if (Property.Tree.UnitySerializedObject.targetObject == null) return;
+
+                // UnitySerializedObject is often null when PropertyTree is created from a plain C# object
+                // (this is how CutsceneGraph draws event fields via PropertyTree.Create(eventData))
+                var so = Property.Tree.UnitySerializedObject;
+                if (so != null && so.targetObject == null) return;
 
                 if (!Property.IsReachableFromRoot())
                 {
@@ -60,8 +63,7 @@ namespace ACore.Tool
                 return;
             }
 
-            // Only draw handles if the property was drawn recently (node is open / selected)
-            // Longer timeout so it continues working inside cutscene graph windows
+            // Only draw handles while the property is still being drawn (node open / inspector visible)
             if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
             if (!showHandles) return;
             if (!IsVisibleInInspector()) return;
@@ -104,7 +106,6 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
-            // Keep the "active" timestamp updated every time the property is drawn
             lastDrawnTime = Time.realtimeSinceStartup;
 
             var _pose = ValueEntry.SmartValue;
