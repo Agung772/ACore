@@ -21,7 +21,7 @@ namespace ACore.Tool
         private bool hideIfCondition;
         private bool showHandles = false;
         private float lastDrawnTime;
-        private const float HideTimeout = 0.1f;
+        private const float HideTimeout = 0.2f;
 
         protected override void Initialize()
         {
@@ -62,7 +62,13 @@ namespace ACore.Tool
             }
 
             if (!showHandles) return;
-            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
+
+            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout)
+            {
+                showHandles = false;
+                return;
+            }
+
             if (!IsVisibleInInspector()) return;
 
             var _pose = ValueEntry.SmartValue;
