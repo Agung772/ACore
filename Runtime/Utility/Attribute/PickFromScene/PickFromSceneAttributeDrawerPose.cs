@@ -20,6 +20,7 @@ namespace ACore.Tool
         private object valueCondition;
         private bool hideIfCondition;
         private bool showHandles = false;
+        private int lastDrawnFrame = -1;
 
         protected override void Initialize()
         {
@@ -59,7 +60,7 @@ namespace ACore.Tool
             }
 
             if (!showHandles) return;
-            if (Property.LastDrawnValueRect.height <= 0f) return;
+            if (Time.frameCount > lastDrawnFrame + 2) return;
             if (!IsVisibleInInspector()) return;
 
             var _pose = ValueEntry.SmartValue;
@@ -100,6 +101,8 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
+            lastDrawnFrame = Time.frameCount;
+
             var _pose = ValueEntry.SmartValue;
 
             GUILayout.BeginHorizontal();

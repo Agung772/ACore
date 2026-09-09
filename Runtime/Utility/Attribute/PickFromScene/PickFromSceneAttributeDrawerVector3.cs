@@ -21,6 +21,7 @@ namespace ACore.Tool
         private object valueCondition;
         private bool hideIfCondition;
         private bool showHandles = false;
+        private int lastDrawnFrame = -1;
 
         protected override void Initialize()
         {
@@ -56,7 +57,7 @@ namespace ACore.Tool
             }
 
             if (!showHandles) return;
-            if (Property.LastDrawnValueRect.height <= 0f) return;
+            if (Time.frameCount > lastDrawnFrame + 2) return;
             if (!IsVisibleInInspector()) return;
 
             var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
@@ -85,6 +86,8 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
+            lastDrawnFrame = Time.frameCount;
+
             GUILayout.BeginHorizontal();
 
             label = string.IsNullOrEmpty(Attribute.Label) ? (content?.text ?? Property.NiceName) : Attribute.Label;
