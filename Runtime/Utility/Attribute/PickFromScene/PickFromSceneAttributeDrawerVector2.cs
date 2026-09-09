@@ -3,6 +3,7 @@
 using System;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.OdinInspector.Editor.Drawers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -15,9 +16,6 @@ namespace ACore.Tool
         private string label;
         private Vector2 current;
         private GUIStyle buttonStyle;
-        private IfAttributeHelper ifAttributeHelper;
-        private object valueCondition;
-        private bool hideIfCondition;
         private bool showHandles;
         private double lastDrawnTime;
         private bool isDragging;
@@ -35,7 +33,6 @@ namespace ACore.Tool
             SceneView.RepaintAll();
 
             buttonStyle = new GUIStyle(GUI.skin.button);
-            SetupOdinVisibilityAttribute();
         }
 
         private bool IsPropertyValid()
@@ -61,7 +58,6 @@ namespace ACore.Tool
         {
             if (!showHandles) return false;
             if (!IsPropertyValid()) return false;
-            if (!IsVisibleInInspector()) return false;
             if (isDragging) return true;
             if (GUIUtility.hotControl != 0) return true;
             return EditorApplication.timeSinceStartup - lastDrawnTime < 1.0;
@@ -157,39 +153,8 @@ namespace ACore.Tool
             GUILayout.EndHorizontal();
         }
 
-        private void SetupOdinVisibilityAttribute()
-        {
-            var condition = "";
-            if (TryGetAttribute<ShowIfAttribute>(out var showIfAttribute))
-            {
-                condition = showIfAttribute.Condition;
-                valueCondition = showIfAttribute.Value;
-                hideIfCondition = false;
-            }
 
-            if (TryGetAttribute<HideIfAttribute>(out var hideIfAttribute))
-            {
-                condition = hideIfAttribute.Condition;
-                valueCondition = hideIfAttribute.Value;
-                hideIfCondition = true;
-            }
 
-            if (string.IsNullOrEmpty(condition)) return;
-            ifAttributeHelper = new IfAttributeHelper(Property, condition, true);
-        }
-
-        private bool TryGetAttribute<T>(out T attribute) where T : Attribute
-        {
-            attribute = Property.Attributes.GetAttribute<T>();
-            return attribute != null;
-        }
-
-        private bool IsVisibleInInspector()
-        {
-            if (ifAttributeHelper == null) return true;
-            var ifValue = ifAttributeHelper.GetValue(valueCondition);
-            return hideIfCondition ? !ifValue : ifValue;
-        }
 
         private void SetPositionToCurrentSceneViewFrame()
         {
