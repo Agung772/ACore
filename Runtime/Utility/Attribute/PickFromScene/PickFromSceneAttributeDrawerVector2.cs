@@ -21,7 +21,8 @@ namespace ACore.Tool
         private object valueCondition;
         private bool hideIfCondition;
         private bool showHandles = false;
-        private int lastDrawnFrame = -1;
+        private float lastDrawnTime;
+        private const float HideTimeout = 0.1f;
 
         protected override void Initialize()
         {
@@ -32,6 +33,7 @@ namespace ACore.Tool
             SceneView.RepaintAll();
             buttonStyle = new GUIStyle(GUI.skin.button);
             SetupOdinVisibilityAttribute();
+            lastDrawnTime = Time.realtimeSinceStartup;
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -57,7 +59,7 @@ namespace ACore.Tool
             }
 
             if (!showHandles) return;
-            if (Time.frameCount > lastDrawnFrame + 2) return;
+            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
             if (!IsVisibleInInspector()) return;
 
             var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
@@ -85,7 +87,7 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
-            lastDrawnFrame = Time.frameCount;
+            lastDrawnTime = Time.realtimeSinceStartup;
 
             GUILayout.BeginHorizontal();
             if (Attribute.Label != "")
