@@ -20,9 +20,7 @@ namespace ACore.Tool
         private IfAttributeHelper ifAttributeHelper;
         private object valueCondition;
         private bool hideIfCondition;
-        private bool showHandles = true;
-        private float lastDrawnTime;
-        private const float HideTimeout = 2.0f;
+        private bool showHandles = false;
 
         protected override void Initialize()
         {
@@ -33,7 +31,6 @@ namespace ACore.Tool
             SceneView.RepaintAll();
             buttonStyle = new GUIStyle(GUI.skin.button);
             SetupOdinVisibilityAttribute();
-            lastDrawnTime = Time.realtimeSinceStartup;
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -43,8 +40,6 @@ namespace ACore.Tool
                 if (Property == null) return;
                 if (Property.Tree == null) return;
 
-                // UnitySerializedObject is often null when PropertyTree is created from a plain C# object
-                // (this is how CutsceneGraph draws event fields via PropertyTree.Create(eventData))
                 var so = Property.Tree.UnitySerializedObject;
                 if (so != null && so.targetObject == null) return;
 
@@ -60,9 +55,8 @@ namespace ACore.Tool
                 return;
             }
 
-            // Only draw handles while the property is still being drawn (node open / inspector visible)
-            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
             if (!showHandles) return;
+            if (Property.LastDrawnValueRect.height <= 0f) return;
             if (!IsVisibleInInspector()) return;
 
             var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
@@ -90,8 +84,6 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
-            lastDrawnTime = Time.realtimeSinceStartup;
-
             GUILayout.BeginHorizontal();
             if (Attribute.Label != "")
             {
@@ -112,19 +104,16 @@ namespace ACore.Tool
                 ValueEntry.ApplyChanges();
             }
 
-            // Pick (set to scene view camera)
             if (SirenixEditorGUI.IconButton(EditorIcons.Flag, buttonStyle))
             {
                 SetPositionToCurrentSceneViewFrame();
             }
 
-            // Search / Frame
             if (SirenixEditorGUI.IconButton(EditorIcons.MagnifyingGlass, buttonStyle))
             {
                 SetFramePosition(current);
             }
 
-            // Show / Hide handles in Scene View
             if (SirenixEditorGUI.IconButton(showHandles ? EditorIcons.Checkmark : EditorIcons.X, buttonStyle))
             {
                 showHandles = !showHandles;
