@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.OdinInspector.Editor.Drawers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -13,12 +13,16 @@ namespace ACore.Tool
 {
     public class PickFromSceneAttributeDrawerVector2 : OdinAttributeDrawer<PickFromSceneAttribute, Vector2>
     {
+        private static readonly List<PickFromSceneAttributeDrawerVector2> ActiveDrawers = new List<PickFromSceneAttributeDrawerVector2>();
+        private static bool sceneGuiRegistered;
+
         private string label;
         private Vector2 current;
         private GUIStyle buttonStyle;
         private bool showHandles;
         private double lastDrawnTime;
         private bool isDragging;
+        private bool registered;
 
         protected override void Initialize()
         {
@@ -27,12 +31,70 @@ namespace ACore.Tool
             showHandles = false;
             isDragging = false;
             lastDrawnTime = EditorApplication.timeSinceStartup;
-
-            SceneView.duringSceneGui -= OnSceneGUI;
-            SceneView.duringSceneGui += OnSceneGUI;
-            SceneView.RepaintAll();
-
             buttonStyle = new GUIStyle(GUI.skin.button);
+            RegisterDrawer();
+        }
+
+        private void RegisterDrawer()
+        {
+            if (registered) return;
+
+            for (int i = ActiveDrawers.Count - 1; i >= 0; i--)
+            {
+                var other = ActiveDrawers[i];
+                if (other == null)
+                {
+                    ActiveDrawers.RemoveAt(i);
+                    continue;
+                }
+                if (other == this) continue;
+                try
+                {
+                    if (other.Property != null && Property != null && other.Property.Path == Property.Path)
+                        other.UnregisterDrawer();
+                }
+                catch
+                {
+                    other.UnregisterDrawer();
+                }
+            }
+
+            registered = true;
+            ActiveDrawers.Add(this);
+            if (!sceneGuiRegistered)
+            {
+                SceneView.duringSceneGui += StaticOnSceneGUI;
+                sceneGuiRegistered = true;
+            }
+        }
+
+        private void UnregisterDrawer()
+        {
+            if (!registered) return;
+            registered = false;
+            ActiveDrawers.Remove(this);
+            showHandles = false;
+            isDragging = false;
+            if (ActiveDrawers.Count == 0 && sceneGuiRegistered)
+            {
+                SceneView.duringSceneGui -= StaticOnSceneGUI;
+                sceneGuiRegistered = false;
+            }
+        }
+
+        private static void StaticOnSceneGUI(SceneView sceneView)
+        {
+            for (int i = ActiveDrawers.Count - 1; i >= 0; i--)
+            {
+                var drawer = ActiveDrawers[i];
+                if (drawer == null || !drawer.IsPropertyValid())
+                {
+                    if (drawer != null) drawer.UnregisterDrawer();
+                    else ActiveDrawers.RemoveAt(i);
+                    continue;
+                }
+                drawer.DrawSceneHandles();
+            }
         }
 
         private bool IsPropertyValid()
@@ -41,10 +103,8 @@ namespace ACore.Tool
             {
                 if (Property == null) return false;
                 if (Property.Tree == null) return false;
-
                 var so = Property.Tree.UnitySerializedObject;
                 if (so != null && so.targetObject == null) return false;
-
                 if (!Property.IsReachableFromRoot()) return false;
                 return true;
             }
@@ -54,33 +114,22 @@ namespace ACore.Tool
             }
         }
 
-        private bool ShouldDrawHandles()
+        private void DrawSceneHandles()
         {
-            if (!showHandles) return false;
-            if (!IsPropertyValid()) return false;
-            if (isDragging) return true;
-            if (GUIUtility.hotControl != 0) return true;
-            return EditorApplication.timeSinceStartup - lastDrawnTime < 1.0;
-        }
-
-        private void OnSceneGUI(SceneView sceneView)
-        {
-            if (!IsPropertyValid())
+            if (!showHandles)
             {
-                SceneView.duringSceneGui -= OnSceneGUI;
+                isDragging = false;
+                return;
+            }
+
+            if (!isDragging && EditorApplication.timeSinceStartup - lastDrawnTime > 1.0)
+            {
                 showHandles = false;
                 isDragging = false;
                 return;
             }
 
-            if (!ShouldDrawHandles())
-            {
-                isDragging = false;
-                return;
-            }
-
             EditorGUI.BeginChangeCheck();
-
             var handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
 
             var drawLabel = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
@@ -97,14 +146,8 @@ namespace ACore.Tool
                 lastDrawnTime = EditorApplication.timeSinceStartup;
                 ValueEntry.SmartValue = handlePosition;
                 current = handlePosition;
-                try
-                {
-                    ValueEntry.ApplyChanges();
-                }
-                catch
-                {
-                    SceneView.duringSceneGui -= OnSceneGUI;
-                }
+                try { ValueEntry.ApplyChanges(); }
+                catch { UnregisterDrawer(); }
             }
             else if (GUIUtility.hotControl == 0)
             {
@@ -114,6 +157,7 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
+            if (!registered) RegisterDrawer();
             lastDrawnTime = EditorApplication.timeSinceStartup;
 
             GUILayout.BeginHorizontal();
@@ -133,14 +177,10 @@ namespace ACore.Tool
             }
 
             if (SirenixEditorGUI.IconButton(EditorIcons.Flag, buttonStyle))
-            {
                 SetPositionToCurrentSceneViewFrame();
-            }
 
             if (SirenixEditorGUI.IconButton(EditorIcons.MagnifyingGlass, buttonStyle))
-            {
                 SetFramePosition(current);
-            }
 
             if (SirenixEditorGUI.IconButton(showHandles ? EditorIcons.Checkmark : EditorIcons.X, buttonStyle))
             {
@@ -152,9 +192,6 @@ namespace ACore.Tool
 
             GUILayout.EndHorizontal();
         }
-
-
-
 
         private void SetPositionToCurrentSceneViewFrame()
         {
@@ -174,7 +211,7 @@ namespace ACore.Tool
 
         ~PickFromSceneAttributeDrawerVector2()
         {
-            SceneView.duringSceneGui -= OnSceneGUI;
+            UnregisterDrawer();
         }
     }
 }
