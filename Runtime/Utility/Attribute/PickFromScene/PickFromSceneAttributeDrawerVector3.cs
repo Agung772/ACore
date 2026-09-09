@@ -20,7 +20,9 @@ namespace ACore.Tool
         private IfAttributeHelper ifAttributeHelper;
         private object valueCondition;
         private bool hideIfCondition;
- 
+        private bool showHandles = true;
+        private float lastDrawnTime;
+
         protected override void Initialize()
         {
             label = Property.NiceName.ToTitleCase();
@@ -30,6 +32,7 @@ namespace ACore.Tool
             SceneView.RepaintAll();
             buttonStyle = new GUIStyle(GUI.skin.button);
             SetupOdinVisibilityAttribute();
+            lastDrawnTime = Time.realtimeSinceStartup;
         }
 
         private void OnSceneGUI(SceneView sceneView)
@@ -52,14 +55,20 @@ namespace ACore.Tool
                 return;
             }
 
+            // Hide handles when property is no longer being drawn (e.g. cutscene node closed / folded)
+            if (Time.realtimeSinceStartup - lastDrawnTime > 0.25f) return;
+            if (!showHandles) return;
             if (Property.LastDrawnValueRect.height <= 0f) return;
             if (!IsVisibleInInspector()) return;
 
             var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
             var _label = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
-            var _cam = SceneView.lastActiveSceneView.camera;
-            var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(_handlePosition) * 0.2f;
-            Handles.Label(_handlePosition + _offset, _label, buttonStyle);
+            var _cam = SceneView.lastActiveSceneView?.camera;
+            if (_cam != null)
+            {
+                var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(_handlePosition) * 0.2f;
+                Handles.Label(_handlePosition + _offset, _label, buttonStyle);
+            }
 
             if (current == _handlePosition) return;
 
@@ -78,6 +87,8 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
+            lastDrawnTime = Time.realtimeSinceStartup;
+
             GUILayout.BeginHorizontal();
 
             label = string.IsNullOrEmpty(Attribute.Label) ? (content?.text ?? Property.NiceName) : Attribute.Label;
@@ -91,14 +102,23 @@ namespace ACore.Tool
                 ValueEntry.ApplyChanges();
             }
 
+            // Pick (set to scene view camera)
             if (SirenixEditorGUI.IconButton(EditorIcons.Flag, buttonStyle))
             {
                 SetPositionToCurrentSceneViewFrame();
             }
 
+            // Search / Frame
             if (SirenixEditorGUI.IconButton(EditorIcons.MagnifyingGlass, buttonStyle))
             {
                 SetFramePosition(current);
+            }
+
+            // Show / Hide handles in Scene View
+            if (SirenixEditorGUI.IconButton(showHandles ? EditorIcons.Checkmark : EditorIcons.X, buttonStyle))
+            {
+                showHandles = !showHandles;
+                SceneView.RepaintAll();
             }
 
             GUILayout.EndHorizontal();
