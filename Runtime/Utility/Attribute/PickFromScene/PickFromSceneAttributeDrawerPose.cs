@@ -21,6 +21,7 @@ namespace ACore.Tool
         private bool hideIfCondition;
         private bool showHandles = true;
         private float lastDrawnTime;
+        private const float HideTimeout = 2.0f; // longer timeout so it still works in cutscene graph / custom editors
 
         protected override void Initialize()
         {
@@ -59,10 +60,10 @@ namespace ACore.Tool
                 return;
             }
 
-            // Hide handles when property is no longer being drawn (e.g. cutscene node closed / folded)
-            if (Time.realtimeSinceStartup - lastDrawnTime > 0.25f) return;
+            // Only draw handles if the property was drawn recently (node is open / selected)
+            // Longer timeout so it continues working inside cutscene graph windows
+            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
             if (!showHandles) return;
-            if (Property.LastDrawnValueRect.height <= 0f) return;
             if (!IsVisibleInInspector()) return;
 
             var _pose = ValueEntry.SmartValue;
@@ -103,6 +104,7 @@ namespace ACore.Tool
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
+            // Keep the "active" timestamp updated every time the property is drawn
             lastDrawnTime = Time.realtimeSinceStartup;
 
             var _pose = ValueEntry.SmartValue;
