@@ -3,7 +3,6 @@
 using System;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
-using Sirenix.OdinInspector.Editor.Drawers;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -16,94 +15,122 @@ namespace ACore.Tool
         private string label;
         private Vector3 current;
         private GUIStyle buttonStyle;
-        private GUIContent labelContent;
         private IfAttributeHelper ifAttributeHelper;
         private object valueCondition;
         private bool hideIfCondition;
-        private bool showHandles = false;
-        private float lastDrawnTime;
-        private const float HideTimeout = 0.25f;
+        private bool showHandles;
+        private double lastDrawnTime;
+        private bool isDragging;
 
         protected override void Initialize()
         {
             label = Property.NiceName.ToTitleCase();
             current = ValueEntry.SmartValue;
+            showHandles = false;
+            isDragging = false;
+            lastDrawnTime = EditorApplication.timeSinceStartup;
+
             SceneView.duringSceneGui -= OnSceneGUI;
             SceneView.duringSceneGui += OnSceneGUI;
             SceneView.RepaintAll();
+
             buttonStyle = new GUIStyle(GUI.skin.button);
             SetupOdinVisibilityAttribute();
-            lastDrawnTime = Time.realtimeSinceStartup;
+        }
+
+        private bool IsPropertyValid()
+        {
+            try
+            {
+                if (Property == null) return false;
+                if (Property.Tree == null) return false;
+
+                var so = Property.Tree.UnitySerializedObject;
+                if (so != null && so.targetObject == null) return false;
+
+                if (!Property.IsReachableFromRoot()) return false;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool ShouldDrawHandles()
+        {
+            if (!showHandles) return false;
+            if (!IsPropertyValid()) return false;
+            if (!IsVisibleInInspector()) return false;
+            if (isDragging) return true;
+            if (GUIUtility.hotControl != 0) return true;
+            return EditorApplication.timeSinceStartup - lastDrawnTime < 1.0;
         }
 
         private void OnSceneGUI(SceneView sceneView)
         {
-            try
-            {
-                if (Property == null) return;
-                if (Property.Tree == null) return;
-
-                var so = Property.Tree.UnitySerializedObject;
-                if (so != null && so.targetObject == null) return;
-
-                if (!Property.IsReachableFromRoot())
-                {
-                    SceneView.duringSceneGui -= OnSceneGUI;
-                    return;
-                }
-            }
-            catch
+            if (!IsPropertyValid())
             {
                 SceneView.duringSceneGui -= OnSceneGUI;
+                showHandles = false;
+                isDragging = false;
                 return;
             }
 
-            if (!showHandles) return;
-
-            if (GUIUtility.hotControl != 0)
-                lastDrawnTime = Time.realtimeSinceStartup;
-
-            if (Time.realtimeSinceStartup - lastDrawnTime > HideTimeout) return;
-            if (!IsVisibleInInspector()) return;
-
-            var _handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
-            var _label = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
-            var _cam = SceneView.lastActiveSceneView?.camera;
-            if (_cam != null)
+            if (!ShouldDrawHandles())
             {
-                var _offset = -_cam.transform.up * HandleUtility.GetHandleSize(_handlePosition) * 0.2f;
-                Handles.Label(_handlePosition + _offset, _label, buttonStyle);
+                isDragging = false;
+                return;
             }
 
-            if (current == _handlePosition) return;
+            EditorGUI.BeginChangeCheck();
 
-            lastDrawnTime = Time.realtimeSinceStartup;
-            ValueEntry.SmartValue = _handlePosition;
-            current = _handlePosition;
+            var handlePosition = Handles.PositionHandle(ValueEntry.SmartValue, Quaternion.identity);
 
-            try
+            var drawLabel = Attribute.UsePathAsAsLabel ? Property.Path.Replace("$", "") : label;
+            var cam = SceneView.lastActiveSceneView != null ? SceneView.lastActiveSceneView.camera : null;
+            if (cam != null)
             {
-                ValueEntry?.ApplyChanges();
+                var offset = -cam.transform.up * HandleUtility.GetHandleSize(handlePosition) * 0.2f;
+                Handles.Label(handlePosition + offset, drawLabel, buttonStyle);
             }
-            catch
+
+            if (EditorGUI.EndChangeCheck())
             {
-                SceneView.duringSceneGui -= OnSceneGUI;
+                isDragging = true;
+                lastDrawnTime = EditorApplication.timeSinceStartup;
+                ValueEntry.SmartValue = handlePosition;
+                current = handlePosition;
+                try
+                {
+                    ValueEntry.ApplyChanges();
+                }
+                catch
+                {
+                    SceneView.duringSceneGui -= OnSceneGUI;
+                }
+            }
+            else if (GUIUtility.hotControl == 0)
+            {
+                isDragging = false;
             }
         }
 
         protected override void DrawPropertyLayout(GUIContent content)
         {
-            lastDrawnTime = Time.realtimeSinceStartup;
+            lastDrawnTime = EditorApplication.timeSinceStartup;
 
             GUILayout.BeginHorizontal();
 
-            label = string.IsNullOrEmpty(Attribute.Label) ? (content?.text ?? Property.NiceName) : Attribute.Label;
-            var _value = EditorGUILayout.Vector3Field(label, ValueEntry.SmartValue);
+            label = string.IsNullOrEmpty(Attribute.Label)
+                ? (content != null ? content.text : Property.NiceName)
+                : Attribute.Label;
 
-            if (current != _value)
+            var value = EditorGUILayout.Vector3Field(label, ValueEntry.SmartValue);
+            if (current != value)
             {
-                ValueEntry.SmartValue = _value;
-                current = _value;
+                ValueEntry.SmartValue = value;
+                current = value;
                 SceneView.RepaintAll();
                 ValueEntry.ApplyChanges();
             }
@@ -121,7 +148,8 @@ namespace ACore.Tool
             if (SirenixEditorGUI.IconButton(showHandles ? EditorIcons.Checkmark : EditorIcons.X, buttonStyle))
             {
                 showHandles = !showHandles;
-                lastDrawnTime = Time.realtimeSinceStartup;
+                isDragging = false;
+                lastDrawnTime = EditorApplication.timeSinceStartup;
                 SceneView.RepaintAll();
             }
 
@@ -130,23 +158,23 @@ namespace ACore.Tool
 
         private void SetupOdinVisibilityAttribute()
         {
-            var _condition = "";
-            if (TryGetAttribute<ShowIfAttribute>(out var _showIfAttribute))
+            var condition = "";
+            if (TryGetAttribute<ShowIfAttribute>(out var showIfAttribute))
             {
-                _condition = _showIfAttribute.Condition;
-                valueCondition = _showIfAttribute.Value;
+                condition = showIfAttribute.Condition;
+                valueCondition = showIfAttribute.Value;
                 hideIfCondition = false;
             }
 
-            if (TryGetAttribute<HideIfAttribute>(out var _hideIfAttribute))
+            if (TryGetAttribute<HideIfAttribute>(out var hideIfAttribute))
             {
-                _condition = _hideIfAttribute.Condition;
-                valueCondition = _hideIfAttribute.Value;
+                condition = hideIfAttribute.Condition;
+                valueCondition = hideIfAttribute.Value;
                 hideIfCondition = true;
             }
 
-            if (string.IsNullOrEmpty(_condition)) return;
-            ifAttributeHelper = new IfAttributeHelper(Property, _condition, true);
+            if (string.IsNullOrEmpty(condition)) return;
+            ifAttributeHelper = new IfAttributeHelper(Property, condition, true);
         }
 
         private bool TryGetAttribute<T>(out T attribute) where T : Attribute
@@ -158,23 +186,24 @@ namespace ACore.Tool
         private bool IsVisibleInInspector()
         {
             if (ifAttributeHelper == null) return true;
-            var _ifValue = ifAttributeHelper.GetValue(valueCondition);
-            return hideIfCondition ? !_ifValue : _ifValue;
+            var ifValue = ifAttributeHelper.GetValue(valueCondition);
+            return hideIfCondition ? !ifValue : ifValue;
         }
 
         private void SetPositionToCurrentSceneViewFrame()
         {
-            if (SceneView.lastActiveSceneView?.camera == null) return;
+            if (SceneView.lastActiveSceneView == null || SceneView.lastActiveSceneView.camera == null) return;
             current = SceneView.lastActiveSceneView.camera.transform.position;
             ValueEntry.SmartValue = current;
-            lastDrawnTime = Time.realtimeSinceStartup;
+            lastDrawnTime = EditorApplication.timeSinceStartup;
             SceneView.RepaintAll();
             ValueEntry.ApplyChanges();
         }
 
         private void SetFramePosition(Vector3 position)
         {
-            SceneView.lastActiveSceneView?.Frame(new Bounds(position, Vector3.one * 10), false);
+            if (SceneView.lastActiveSceneView == null) return;
+            SceneView.lastActiveSceneView.Frame(new Bounds(position, Vector3.one * 10), false);
         }
 
         ~PickFromSceneAttributeDrawerVector3()
