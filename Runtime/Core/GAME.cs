@@ -10,7 +10,7 @@ namespace ACore
     public static class GAME
     {
         public static GameManager Manager { get; internal set; }
-        public static string CurrentScene { get; set; }
+
         private static Dictionary<Type, GlobalBehaviour> globals;
         private static Dictionary<Type, LocalBehaviour> locals = new();
         

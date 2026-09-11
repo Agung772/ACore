@@ -7,19 +7,32 @@ namespace ACore
 {
     public static class SCENE
     {
+        public static string Current { get; private set; }
         public static event Action OnLoaded;
         public static event Action OnUnloaded;
 
         public static void Initialize()
         {
-            GAME.CurrentScene = SceneManager.GetActiveScene().name;
+            Current = SceneManager.GetActiveScene().name;
             SceneManager.sceneLoaded += (_, _) => OnLoaded?.Invoke();
             SceneManager.sceneUnloaded += _ => OnUnloaded?.Invoke();
         }
 
         public static void Restart(LoadSceneSetting setting = null)
         {
-            Load(GAME.CurrentScene, setting);
+            Load(Current, setting);
+        }
+        
+        public static void Restart(Action onComplete)
+        {
+            var _setting = new LoadSceneSetting { onComplete = onComplete };
+            Load(Current, _setting);
+        }
+        
+        public static IEnumerator RestartCoroutine(LoadSceneSetting setting = null)
+        {
+            var _setting = new LoadSceneSetting();
+            yield return LoadCoroutine(Current, _setting);
         }
 
         public static void Load(string sceneName)
@@ -87,7 +100,7 @@ namespace ACore
             OBJECT.RemoveOnLoaded(setting.removeAllPopup);
             var _async = SceneManager.LoadSceneAsync(sceneName);
 
-            GAME.CurrentScene = sceneName;
+            Current = sceneName;
             while (!_async.isDone)
             {
                 setting.onProgress?.Invoke(Mathf.Clamp01(_async.progress / 0.9f));
