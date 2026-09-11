@@ -36,7 +36,7 @@ namespace ACore
             var _waitStart = DateTime.UtcNow;
             while (SupabaseManager.Client == null)
             {
-                if ((DateTime.UtcNow - _waitStart).TotalSeconds > 30)
+                if ((DateTime.UtcNow - _waitStart).TotalSeconds > 5)
                 {
                     Debug.LogError("[Auth] Supabase client initialization timed out.");
                     return;
@@ -44,7 +44,7 @@ namespace ACore
                 await Task.Delay(100);
             }
 
-            if (!await NETWORK.IsConnection().WithTimeout(10))
+            if (!await NETWORK.IsConnection())
             {
                 Debug.LogError("[Auth] No internet connection.");
                 return;
@@ -246,7 +246,7 @@ namespace ACore
             if (SupabaseManager.Client == null)
                 return new NetworkResult("Supabase client is not initialized.");
 
-            if (!await NETWORK.IsConnection().WithTimeout(10))
+            if (!await NETWORK.IsConnection())
                 return new NetworkResult("No internet connection.");
 
             if (isAuthenticating)
@@ -297,7 +297,7 @@ namespace ACore
             if (SupabaseManager.Client == null)
                 return new NetworkResult("Supabase client is not initialized.");
 
-            if (!await NETWORK.IsConnection().WithTimeout(10))
+            if (!await NETWORK.IsConnection())
                 return new NetworkResult("No internet connection.");
 
             if (isAuthenticating)
@@ -381,7 +381,7 @@ namespace ACore
             if (SupabaseManager.Client == null)
                 return new NetworkResult<bool>("Supabase client is not initialized.");
 
-            if (!await NETWORK.IsConnection().WithTimeout(10))
+            if (!await NETWORK.IsConnection())
                 return new NetworkResult<bool>("No internet connection.");
 
             try
