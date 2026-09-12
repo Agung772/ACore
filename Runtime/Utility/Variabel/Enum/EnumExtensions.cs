@@ -9,6 +9,12 @@ namespace ACore
             return (T)Enum.Parse(typeof(T), text, true);
         }
         
+        public static T ToEnum<T>(this Enum source) where T : struct, Enum
+        {
+            if (source == null) return default;
+            return Enum.TryParse(source.ToString(), true, out T _result) ? _result : default;
+        }
+        
         public static T ToEnumOrDefault<T>(this string text) where T : struct, Enum
         {
             return Enum.TryParse(text, true, out T _value) ? _value : default;
